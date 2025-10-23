@@ -1,0 +1,50 @@
+# BeautyDrop – Ülkelere Göre Doğrudan İndirim/Fırsat URL’leri
+# Oluşturulma: 2025-10-23 (Europe/Berlin)
+# Not: Her satır 'Ad | URL' biçiminde. Yalnızca herkese açık ve çalışır sayfalar listelenmiştir.
+
+[TR]
+Sephora TR – İndirimli Ürünler | https://www.sephora.com.tr/avantajli-teklif-5/
+Sephora TR – Kampanyalar | https://www.sephora.com.tr/sephora-kampanyalar.html
+Watsons TR – Kampanyalar | https://www.watsons.com.tr/kampanyalar
+Watsons TR – Tek Günlük Ürünler | https://www.watsons.com.tr/tek-gunluk-urunler/c/50199
+Rossmann TR – İndirimli Ürünler | https://www.rossmann.com.tr/indirimli-urunler
+Rossmann TR – Haftanın Fırsatları | https://www.rossmann.com.tr/haftanin-firsat-urunleri
+
+[DE]
+Douglas DE – Sale | https://www.douglas.de/de/c/sale/05
+Flaconi DE – Sale | https://www.flaconi.de/sale/
+Sephora DE – Sale (Genel) | https://www.sephora.de/sale/
+Sephora DE – Parfum Sale | https://www.sephora.de/sale-parfum/
+Parfumdreams DE – Angebote (Beauty Sale) | https://www.parfumdreams.de/Angebote
+
+[FR]
+Sephora FR – Bons Plans Beauté | https://www.sephora.fr/cadeaux-bon-plan-beaute-bon-plan-beaute/
+Sephora FR – Soldes | https://www.sephora.fr/soldes/
+Marionnaud FR – Promotions | https://www.marionnaud.fr/promotions
+Nocibé FR – Bons Plans | https://www.nocibe.fr/fr/c/bons-plans/05
+Notino FR – Promotions | https://www.notino.fr/promotions/
+
+[IT]
+Sephora IT – Offerte di Bellezza | https://www.sephora.it/offerte-di-bellezza/
+Sephora IT – Ultime Occasioni (-40%) | https://www.sephora.it/offerte-di-bellezza/ultime-occasioni/
+Douglas IT – Promozioni (Beauty Sale) | https://www.douglas.it/it/c/promozioni/0585
+Marionnaud IT – Promozioni | https://www.marionnaud.it/promozioni/c/top-promozioni
+
+[ES]
+Sephora ES – Beauty Ofertas | https://www.sephora.es/beauty-ofertas/
+Douglas ES – Sale | https://www.douglas.es/es/c/sale/05
+Notino ES – Ofertas | https://www.notino.es/oferta/
+Primor ES – Outlet (Perfumes) | https://www.primor.eu/es_es/outlet-perfumes
+
+[PL]
+Sephora PL – Beauty Offers | https://www.sephora.pl/beauty-offers.html
+Sephora PL – Wyprzedaż | https://www.sephora.pl/wyprzedaz/
+Douglas PL – Promocje | https://www.douglas.pl/pl/c/promocje/05
+Hebe PL – Promocje | https://www.hebe.pl/promocje/
+Rossmann PL – Promocje | https://www.rossmann.pl/promocje
+Notino PL – Wyprzedaż | https://www.notino.pl/wyprzedaz/
+
+[RO]
+Sephora RO – Oferte Speciale | https://www.sephora.ro/special-offers.html
+Douglas RO – Reduceri | https://www.douglas.ro/c/reduceri/
+Notino RO – Reduceri | https://www.notino.ro/reduceri/

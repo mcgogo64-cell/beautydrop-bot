@@ -15,14 +15,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # Use `npm install` instead of `npm ci` to avoid requiring a lock file.  The
+        # repository does not currently include a package‑lock.json, and `npm ci`
+        # fails without it.  `npm install` will install dependencies based on
+        # package.json directly.
+        run: npm install
 
       - name: Install Playwright (with system deps)
         run: npx playwright install --with-deps

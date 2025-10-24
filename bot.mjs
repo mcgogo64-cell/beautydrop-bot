@@ -59,10 +59,10 @@ const MEN_NEG = new RegExp(
 
 // === 1) FEEDS TXT PARSER ===
 //fu removed duplicate parseFeedsTxt
-=== 2) DOMAIN-BAZLI SELECTOR OVERRIDES ===
+// === 2) DOMAIN-BAZLI SELECTOR OVERRIDES ===
 const OVERRIDES = [
-  { hostRe: /douglas\./, card: ['.product-tile','article','.product','.product-item'], title: ['.product-title','[class*=title]','a[title]','h3'], price: ['[class*=price]','.price','[data-test*=price]'], image: ['img'] },
-  { hostRe: /flaconi\./, card: ['article','.product-card','.ProductTile'], title: ['h3','[class*="title"]','a[title]'], price: ['[class*=price]','.price'], image: ['img'] },
+ { hostRe: /douglas\./, card: ['.product-tile','article','.product','.product-item'], title: ['.product-title','[class*=title]','a[title]','h3'], price: ['[class*=price]','.price','[data-test*=price]'], image: ['img'] },
+: /flaconi\./, card: ['article','.product-card','.ProductTile'], title: ['h3','[class*="title"]','a[title]'], price: ['[class*=price]','.price'], image: ['img'] },
   { hostRe: /sephora\./, card: ['article','[data-comp*="ProductCard"]','.product-card'], title: ['h3','[class*="title"]','a[title]'], price: ['[class*=price]','.price'], image: ['img'] },
   { hostRe: /notino\./,  card: ['.product','.product-item','article'], title: ['h3','[class*="title"]','a[title]'], price: ['[class*=price]','.price'], image: ['img'] },
   { hostRe: /rossmann\./, card: ['article','.product','.product-tile'], title: ['h3','[class*="title"]','a[title]'], price: ['[class*=price]','.price'], image: ['img'] },

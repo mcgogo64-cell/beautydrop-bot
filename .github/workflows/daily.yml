@@ -39,12 +39,18 @@ jobs:
       - name: Run bot
         run: node bot.mjs --headless --maxPerPage=60
 
-      - name: Commit & Push updated data
-        run: |
-          git config user.name "beautydrop-bot"
-          git config user.email "bot@users.noreply.github.com"
-                git add data/deals-*.json || true
-            git commit -m "auto: daily update ${{ github.run_id }}" || echo "No changes to commit"
-            git fetch origin main
-       git pull --rebase origin main || true
-    git push origin HEAD:main
+       - name: Commit files
+      run: |
+        git config user.name  "beautydrop-bot"
+        git config user.email "bot@users.noreply.github.com"
+        git add data/deals-*.json || true
+        git commit -m "auto: daily update ${{ github.run_id }}" || echo "No changes"
+
+    - name: Pull latest main (rebase to avoid non-FF)
+      run: |
+        git fetch origin main
+          git pull --rebase origin main || true
+
+    - name: Push changes
+      run: |
+        git push origin HEAD:main

@@ -1,50 +1,199 @@
-# BeautyDrop – Ülkelere Göre Doğrudan İndirim/Fırsat URL’leri
-# Oluşturulma: 2025-10-23 (Europe/Berlin)
-# Not: Her satır 'Ad | URL' biçiminde. Yalnızca herkese açık ve çalışır sayfalar listelenmiştir.
+# =========================
+# TURKEY (TR)
+# =========================
+https://www.sephora.com.tr/sephora-kampanyalar.html
+https://www.sephora.com.tr/avantajli-teklif-5/
+https://www.watsons.com.tr/kampanyalar
+https://www.rossmann.com.tr/indirimli-urunler
+https://www.gratis.com/kampanyalar
+https://www.boyner.com.tr/kadin/kozmetik?kampanya=indirim
+https://www.sevil.com.tr/indirim
 
-[TR]
-Sephora TR – İndirimli Ürünler | https://www.sephora.com.tr/avantajli-teklif-5/
-Sephora TR – Kampanyalar | https://www.sephora.com.tr/sephora-kampanyalar.html
-Watsons TR – Kampanyalar | https://www.watsons.com.tr/kampanyalar
-Watsons TR – Tek Günlük Ürünler | https://www.watsons.com.tr/tek-gunluk-urunler/c/50199
-Rossmann TR – İndirimli Ürünler | https://www.rossmann.com.tr/indirimli-urunler
-Rossmann TR – Haftanın Fırsatları | https://www.rossmann.com.tr/haftanin-firsat-urunleri
+# =========================
+# GERMANY (DE)
+# =========================
+https://www.douglas.de/de/c/sale/010100
+https://www.flaconi.de/sale/
+https://www.parfumdreams.de/Angebote
+https://www.sephora.de/sale/
+https://www.galeria.de/c/angebote/beauty/
+https://www.mueller.de/angebote/
+https://www.dm.de/angebote
+https://www.rossmann.de/de/angebote
+https://www.notino.de/sonderangebote/
+https://www.nivea.de/angebote
 
-[DE]
-Douglas DE – Sale | https://www.douglas.de/de/c/sale/05
-Flaconi DE – Sale | https://www.flaconi.de/sale/
-Sephora DE – Sale (Genel) | https://www.sephora.de/sale/
-Sephora DE – Parfum Sale | https://www.sephora.de/sale-parfum/
-Parfumdreams DE – Angebote (Beauty Sale) | https://www.parfumdreams.de/Angebote
+# =========================
+# FRANCE (FR)
+# =========================
+https://www.sephora.fr/soldes/
+https://www.sephora.fr/offres-beaute/
+https://www.marionnaud.fr/promotions/
+https://www.nocibe.fr/promotions/
+https://www.yves-rocher.fr/bonnes-affaires/
+https://www.beautysuccess.fr/promotions
+https://www.parfumdo.com/fr/bon-plan
 
-[FR]
-Sephora FR – Bons Plans Beauté | https://www.sephora.fr/cadeaux-bon-plan-beaute-bon-plan-beaute/
-Sephora FR – Soldes | https://www.sephora.fr/soldes/
-Marionnaud FR – Promotions | https://www.marionnaud.fr/promotions
-Nocibé FR – Bons Plans | https://www.nocibe.fr/fr/c/bons-plans/05
-Notino FR – Promotions | https://www.notino.fr/promotions/
+# =========================
+# ITALY (IT)
+# =========================
+https://www.sephora.it/offerte-di-bellezza/
+https://www.sephora.it/offerte-di-bellezza/ultime-occasioni/
+https://www.douglas.it/it/c/sale/010100
+https://www.kikocosmetics.com/it-it/offerte.html
+https://www.notino.it/offerte/
+https://www.pinalli.it/it/it/offerte
+https://www.lasprofumerie.it/it/offerte
 
-[IT]
-Sephora IT – Offerte di Bellezza | https://www.sephora.it/offerte-di-bellezza/
-Sephora IT – Ultime Occasioni (-40%) | https://www.sephora.it/offerte-di-bellezza/ultime-occasioni/
-Douglas IT – Promozioni (Beauty Sale) | https://www.douglas.it/it/c/promozioni/0585
-Marionnaud IT – Promozioni | https://www.marionnaud.it/promozioni/c/top-promozioni
+# =========================
+# SPAIN (ES)
+# =========================
+https://www.sephora.es/beauty-ofertas/
+https://www.douglas.es/es/c/sale/010100
+https://www.primor.eu/es_es/ofertas
+https://www.druni.es/ofertas
+https://www.perfumesclub.com/es/ofertas
+https://www.notino.es/oferta/
 
-[ES]
-Sephora ES – Beauty Ofertas | https://www.sephora.es/beauty-ofertas/
-Douglas ES – Sale | https://www.douglas.es/es/c/sale/05
-Notino ES – Ofertas | https://www.notino.es/oferta/
-Primor ES – Outlet (Perfumes) | https://www.primor.eu/es_es/outlet-perfumes
+# =========================
+# NETHERLANDS (NL)
+# =========================
+https://www.iciparisxl.nl/aanbiedingen
+https://www.douglas.nl/nl/c/sale/010100
+https://www.kruidvat.nl/aanbiedingen
+https://www.etos.nl/aanbiedingen
+https://www.wehkamp.nl/beauty-sale/
 
-[PL]
-Sephora PL – Beauty Offers | https://www.sephora.pl/beauty-offers.html
-Sephora PL – Wyprzedaż | https://www.sephora.pl/wyprzedaz/
-Douglas PL – Promocje | https://www.douglas.pl/pl/c/promocje/05
-Hebe PL – Promocje | https://www.hebe.pl/promocje/
-Rossmann PL – Promocje | https://www.rossmann.pl/promocje
-Notino PL – Wyprzedaż | https://www.notino.pl/wyprzedaz/
+# =========================
+# BELGIUM (BE)
+# =========================
+https://www.iciparisxl.be/nl/aanbiedingen
+https://www.kruidvat.be/nl/aanbiedingen
+https://www.di.be/nl/promoties
+https://www.douglas.be/nl/c/sale/010100
 
-[RO]
-Sephora RO – Oferte Speciale | https://www.sephora.ro/special-offers.html
-Douglas RO – Reduceri | https://www.douglas.ro/c/reduceri/
-Notino RO – Reduceri | https://www.notino.ro/reduceri/
+# =========================
+# AUSTRIA (AT)
+# =========================
+https://www.douglas.at/at/c/sale/010100
+https://www.marionnaud.at/angebote
+https://www.dm.at/angebote
+https://www.bipa.at/angebote
+https://www.nivea.at/angebote
+
+# =========================
+# SWITZERLAND (CH)
+# =========================
+https://www.douglas.ch/de/c/sale/010100
+https://www.marionnaud.ch/de/angebote
+https://www.impo.ch/de/angebote
+https://www.manor.ch/de/u/beauty-angebote
+
+# =========================
+# POLAND (PL)
+# =========================
+https://www.sephora.pl/wyprzedaz/
+https://www.douglas.pl/pl/c/promocje/05
+https://www.hebe.pl/promocje/
+https://www.rossmann.pl/promocje
+https://www.notino.pl/wyprzedaz/
+
+# =========================
+# CZECHIA (CZ)
+# =========================
+https://www.notino.cz/akce/
+https://www.notino.cz/vyprodej/
+https://www.douglas.cz/c/vyprodej/010100
+https://www.sephora.cz/slevy/
+
+# =========================
+# SLOVAKIA (SK)
+# =========================
+https://www.notino.sk/akcie/
+https://www.douglas.sk/sk/c/vypredaj/010100
+https://www.sephora.sk/akcie/
+
+# =========================
+# HUNGARY (HU)
+# =========================
+https://www.notino.hu/akciok/
+https://www.douglas.hu/hu/c/akciok/010100
+https://shop.rossmann.hu/akciok
+https://www.dm.hu/akciok
+
+# =========================
+# ROMANIA (RO)
+# =========================
+https://www.sephora.ro/special-offers.html
+https://www.douglas.ro/c/reduceri/
+https://www.notino.ro/reduceri/
+https://www.dm.ro/oferte
+
+# =========================
+# BULGARIA (BG)
+# =========================
+https://www.notino.bg/namalenie/
+https://www.douglas.bg/bg/c/namalenie/010100
+https://www.dm.bg/promocii
+
+# =========================
+# GREECE (GR)
+# =========================
+https://www.sephora.gr/prosfores/
+https://www.hondoscenter.com/el/prosfores/
+https://www.notino.gr/prosfores/
+
+# =========================
+# PORTUGAL (PT)
+# =========================
+https://www.sephora.pt/beauty-ofertas/
+https://www.douglas.pt/pt/c/sale/010100
+https://www.perfumesecompanhia.pt/pt/promocoes
+https://www.notino.pt/promocoes/
+
+# =========================
+# DENMARK (DK)
+# =========================
+https://www.matas.dk/tilbud
+https://www.boozt.com/dk/da/beauty/salg
+https://nicehair.dk/tilbud
+https://www.sephora.dk/tilbud/
+
+# =========================
+# SWEDEN (SE)
+# =========================
+https://www.kicks.se/erbjudanden
+https://www.lyko.com/sv/rea
+https://www.ahlens.se/c/beauty?campaign=Sale
+
+# =========================
+# NORWAY (NO)
+# =========================
+https://www.kicks.no/tilbud
+https://www.lyko.com/no/tilbud
+https://www.vita.no/tilbud
+
+# =========================
+# FINLAND (FI)
+# =========================
+https://www.kicks.fi/tarjoukset
+https://www.cocopanda.fi/fi/tarjoukset
+https://www.sokos.fi/fi/sokos/edut-ja-kampanjat
+
+# =========================
+# IRELAND (IE)
+# =========================
+https://www.boots.ie/offers
+https://www.mccabespharmacy.com/collections/offers
+https://www.meagherspharmacy.ie/collections/offers
+
+# =========================
+# UNITED KINGDOM (UK)
+# =========================
+https://www.boots.com/offers
+https://www.superdrug.com/offers
+https://www.lookfantastic.com/offers.list
+https://www.cultbeauty.co.uk/offers.list
+https://www.beautybay.com/l/offers/
+https://www.sephora.co.uk/gb/en/offers
+https://www.spacenk.com/uk/sale

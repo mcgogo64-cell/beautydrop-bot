@@ -1,0 +1,866 @@
+{
+  "date": "2025-10-24",
+  "total": 60,
+  "perCountry": {
+    "DE": 3,
+    "ES": 0,
+    "FR": 0,
+    "IT": 0,
+    "NL": 0,
+    "PL": 0,
+    "TR": 0,
+    "UNK": 15
+  },
+  "results": [
+    {
+      "sourceUrl": "https://www.sephora.com.tr/sephora-kampanyalar.html",
+      "finalUrl": "https://www.sephora.com.tr/sephora-kampanyalar.html",
+      "host": "www.sephora.com.tr",
+      "country": "TR",
+      "startedAt": "2025-10-24T20:16:47.229Z",
+      "finishedAt": "2025-10-24T20:16:50.071Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.sephora.com.tr/avantajli-teklif-5/",
+      "finalUrl": "https://www.sephora.com.tr/avantajli-teklif-5/",
+      "host": "www.sephora.com.tr",
+      "country": "TR",
+      "startedAt": "2025-10-24T20:16:47.232Z",
+      "finishedAt": "2025-10-24T20:16:50.020Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.watsons.com.tr/kampanyalar",
+      "startedAt": "2025-10-24T20:16:47.232Z",
+      "finishedAt": "2025-10-24T20:16:48.694Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.watsons.com.tr/kampanyalar\nCall log:\n  - navigating to \"https://www.watsons.com.tr/kampanyalar\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.rossmann.com.tr/indirimli-urunler",
+      "finalUrl": "https://www.rossmann.com.tr/indirimli-urunler",
+      "host": "www.rossmann.com.tr",
+      "country": "TR",
+      "startedAt": "2025-10-24T20:16:47.232Z",
+      "finishedAt": "2025-10-24T20:16:50.143Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.gratis.com/kampanyalar",
+      "finalUrl": "https://www.gratis.com/kampanyalar",
+      "host": "www.gratis.com",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:16:48.732Z",
+      "finishedAt": "2025-10-24T20:16:50.984Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.boyner.com.tr/kadin/kozmetik?kampanya=indirim",
+      "finalUrl": "https://www.boyner.com.tr/kadin/kozmetik?kampanya=indirim",
+      "host": "www.boyner.com.tr",
+      "country": "TR",
+      "startedAt": "2025-10-24T20:16:50.062Z",
+      "finishedAt": "2025-10-24T20:16:52.586Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.sevil.com.tr/indirim",
+      "finalUrl": "https://www.sevil.com.tr/indirim",
+      "host": "www.sevil.com.tr",
+      "country": "TR",
+      "startedAt": "2025-10-24T20:16:50.172Z",
+      "finishedAt": "2025-10-24T20:16:52.571Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.de/de/c/sale/010100",
+      "finalUrl": "https://www.douglas.de/de/c/sale/010100",
+      "host": "www.douglas.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:50.224Z",
+      "finishedAt": "2025-10-24T20:16:51.804Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.flaconi.de/sale/",
+      "finalUrl": "https://www.flaconi.de/sale/",
+      "host": "www.flaconi.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:51.008Z",
+      "finishedAt": "2025-10-24T20:16:52.597Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.parfumdreams.de/Angebote",
+      "finalUrl": "https://www.parfumdreams.de/Angebote",
+      "host": "www.parfumdreams.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:51.822Z",
+      "finishedAt": "2025-10-24T20:16:58.069Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.sephora.de/sale/",
+      "finalUrl": "https://www.sephora.de/sale/",
+      "host": "www.sephora.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:52.623Z",
+      "finishedAt": "2025-10-24T20:16:54.451Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.galeria.de/c/angebote/beauty/",
+      "finalUrl": "https://www.galeria.de/c/angebote/beauty/",
+      "host": "www.galeria.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:52.635Z",
+      "finishedAt": "2025-10-24T20:16:54.331Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.mueller.de/angebote/",
+      "finalUrl": "https://www.mueller.de/angebote/",
+      "host": "www.mueller.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:52.641Z",
+      "finishedAt": "2025-10-24T20:16:55.481Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.dm.de/angebote",
+      "finalUrl": "https://www.dm.de/angebote",
+      "host": "www.dm.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:54.396Z",
+      "finishedAt": "2025-10-24T20:16:59.033Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.rossmann.de/de/angebote",
+      "startedAt": "2025-10-24T20:16:54.495Z",
+      "finishedAt": "2025-10-24T20:16:57.585Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.content: Unable to retrieve content because the page is navigating and changing the content."
+      }
+    },
+    {
+      "sourceUrl": "https://www.notino.de/sonderangebote/",
+      "finalUrl": "https://www.notino.de/sonderangebote/",
+      "host": "www.notino.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:55.524Z",
+      "finishedAt": "2025-10-24T20:16:57.351Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.nivea.de/angebote",
+      "finalUrl": "https://www.nivea.de/angebote",
+      "host": "www.nivea.de",
+      "country": "DE",
+      "startedAt": "2025-10-24T20:16:57.434Z",
+      "finishedAt": "2025-10-24T20:17:03.092Z",
+      "ok": true,
+      "itemsCount": 3,
+      "items": [
+        {
+          "source": "ldjson",
+          "name": "Anti-Age 2in1 Power Serum 30ml",
+          "brand": "NIVEA Men Face",
+          "price": null,
+          "currency": null,
+          "availability": null,
+          "url": "https://www.nivea.de/produkte/anti-age-2in1-power-serum-30ml-40060000200680001.html",
+          "image": "https://img.nivea.com/-/media/miscellaneous/media-center-items/7/0/3/02b06a055a5943629be8001c1aed7201-web_1010x1180_transparent_png.png",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Eau de Toilette 100ml",
+          "brand": "NIVEA Universal Cremes",
+          "price": null,
+          "currency": null,
+          "availability": null,
+          "url": "https://www.nivea.de/produkte/eau-de-toilette-100ml-40059009630790001.html",
+          "image": "https://img.nivea.com/-/media/miscellaneous/media-center-items/2/4/6/91d76c98bbb940dfb9008cc03f013951-web_1010x1180_transparent_png.png",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Eau de Toilette 100ml",
+          "brand": "NIVEA Universal Cremes",
+          "price": null,
+          "currency": null,
+          "availability": null,
+          "url": "https://www.nivea.de/produkte/eau-de-toilette-100ml-40059009628670001.html",
+          "image": "https://img.nivea.com/-/media/miscellaneous/media-center-items/7/2/d/739f7d63200e47daa5a88a746af23315-web_1010x1180_transparent_png.png",
+          "is_on_sale": null
+        }
+      ]
+    },
+    {
+      "sourceUrl": "https://www.sephora.fr/soldes/",
+      "finalUrl": "https://www.sephora.fr/soldes/",
+      "host": "www.sephora.fr",
+      "country": "FR",
+      "startedAt": "2025-10-24T20:16:57.666Z",
+      "finishedAt": "2025-10-24T20:16:59.208Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.sephora.fr/offres-beaute/",
+      "finalUrl": "https://www.sephora.fr/offres-beaute/",
+      "host": "www.sephora.fr",
+      "country": "FR",
+      "startedAt": "2025-10-24T20:16:58.117Z",
+      "finishedAt": "2025-10-24T20:16:59.580Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.marionnaud.fr/promotions/",
+      "startedAt": "2025-10-24T20:16:59.088Z",
+      "finishedAt": "2025-10-24T20:16:59.289Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.marionnaud.fr/promotions/\nCall log:\n  - navigating to \"https://www.marionnaud.fr/promotions/\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.nocibe.fr/promotions/",
+      "finalUrl": "https://www.nocibe.fr/promotions/",
+      "host": "www.nocibe.fr",
+      "country": "FR",
+      "startedAt": "2025-10-24T20:16:59.228Z",
+      "finishedAt": "2025-10-24T20:17:00.948Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.yves-rocher.fr/bonnes-affaires/",
+      "finalUrl": "https://www.yves-rocher.fr/bonnes-affaires/",
+      "host": "www.yves-rocher.fr",
+      "country": "FR",
+      "startedAt": "2025-10-24T20:16:59.336Z",
+      "finishedAt": "2025-10-24T20:17:00.810Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.beautysuccess.fr/promotions",
+      "finalUrl": "https://www.beautysuccess.fr/promotions",
+      "host": "www.beautysuccess.fr",
+      "country": "FR",
+      "startedAt": "2025-10-24T20:16:59.603Z",
+      "finishedAt": "2025-10-24T20:17:05.757Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.parfumdo.com/fr/bon-plan",
+      "finalUrl": "https://www.parfumdo.com/fr/bon-plan",
+      "host": "www.parfumdo.com",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:00.915Z",
+      "finishedAt": "2025-10-24T20:17:12.346Z",
+      "ok": true,
+      "itemsCount": 8,
+      "items": [
+        {
+          "source": "ldjson",
+          "name": "Parfum à Partager",
+          "brand": "",
+          "price": "69.75",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/1870-parfum-a-partager",
+          "image": "",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Parfum pas cher",
+          "brand": "",
+          "price": "3000",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/4152-parfum-pas-cher",
+          "image": "",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Parfum pour Cheveux",
+          "brand": "",
+          "price": "18.3",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/1798-parfums-pour-cheveux",
+          "image": "",
+          "is_on_sale": true
+        },
+        {
+          "source": "ldjson",
+          "name": "Parfum de Maison",
+          "brand": "",
+          "price": "15.21",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/2933-parfum-de-maison",
+          "image": "",
+          "is_on_sale": true
+        },
+        {
+          "source": "ldjson",
+          "name": "Parfum de luxe - Parfumdo",
+          "brand": "",
+          "price": "3000",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/5340-parfumerie-selective",
+          "image": "",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Parfum personnalisé",
+          "brand": "",
+          "price": "48.6",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/5500-parfum-personnalise",
+          "image": "",
+          "is_on_sale": true
+        },
+        {
+          "source": "ldjson",
+          "name": "Top Tendances",
+          "brand": "",
+          "price": "3000",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/5403-top-tendances",
+          "image": "",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "ORIGINAL LE PARFUM Parfum vaporisateur",
+          "brand": "Lacoste",
+          "price": "47.10",
+          "currency": "EUR",
+          "availability": null,
+          "url": "https://www.parfumdo.com/429950-original-le-parfum-parfum-vaporisateur.html",
+          "image": "https://www.parfumdo.com/103312-large_default/original-le-parfum-parfum-vaporisateur.jpg",
+          "is_on_sale": null
+        }
+      ]
+    },
+    {
+      "sourceUrl": "https://www.sephora.it/offerte-di-bellezza/",
+      "finalUrl": "https://www.sephora.it/offerte-di-bellezza/",
+      "host": "www.sephora.it",
+      "country": "IT",
+      "startedAt": "2025-10-24T20:17:01.064Z",
+      "finishedAt": "2025-10-24T20:17:02.927Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.sephora.it/offerte-di-bellezza/ultime-occasioni/",
+      "finalUrl": "https://www.sephora.it/offerte-di-bellezza/ultime-occasioni/",
+      "host": "www.sephora.it",
+      "country": "IT",
+      "startedAt": "2025-10-24T20:17:03.000Z",
+      "finishedAt": "2025-10-24T20:17:04.556Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.it/it/c/sale/010100",
+      "finalUrl": "https://www.douglas.it/it/c/sale/010100",
+      "host": "www.douglas.it",
+      "country": "IT",
+      "startedAt": "2025-10-24T20:17:03.177Z",
+      "finishedAt": "2025-10-24T20:17:04.818Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.kikocosmetics.com/it-it/offerte.html",
+      "finalUrl": "https://www.kikocosmetics.com/it-it/offerte.html",
+      "host": "www.kikocosmetics.com",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:04.595Z",
+      "finishedAt": "2025-10-24T20:17:18.871Z",
+      "ok": true,
+      "itemsCount": 7,
+      "items": [
+        {
+          "source": "ldjson",
+          "name": "Scent Of Milan Eau De Parfum Colonne District",
+          "brand": "",
+          "price": "39.99",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/scent-of-milan-eau-de-parfum-colonne-district-49556/",
+          "image": "https://assets.joqhl8w6.on-eva.io/blob/54065859-7ddf-0ad6-4e29-c5555588e141",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Scent Of Milan Eau de Parfum Brera District",
+          "brand": "",
+          "price": "39.99",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/scent-of-milan-eau-de-parfum-brera-district-42410/",
+          "image": "https://assets.joqhl8w6.on-eva.io/blob/864d2a24-75a4-ccc6-0b38-310fbeaa2dc1",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Scent Of Milan Eau de Parfum Montenapoleone District",
+          "brand": "",
+          "price": "39.99",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/scent-of-milan-eau-de-parfum-montenapoleone-d-42411/",
+          "image": "https://assets.joqhl8w6.on-eva.io/blob/733d88ee-f843-e2b3-4a6c-2bc3cc5efb51",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Scent Of Milan Eau de Parfum Navigli District",
+          "brand": "",
+          "price": "39.99",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/scent-of-milan-eau-de-parfum-navigli-district-42413/",
+          "image": "https://assets.joqhl8w6.on-eva.io/blob/8c49a053-83c3-8aa5-889b-2bd44d300372",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Scent Of Milan Eau de Parfum Isola District",
+          "brand": "",
+          "price": "39.99",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/scent-of-milan-eau-de-parfum-isola-district-42412/",
+          "image": "https://assets.joqhl8w6.on-eva.io/blob/331058e9-3f2a-a951-ac8a-2bcf2a6c00ef",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Scent Of Milan Gift Set Duomo District 01",
+          "brand": "",
+          "price": "45.99",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/scent-of-milan-gift-set-duomo-district-01-49874/",
+          "image": "https://assets.joqhl8w6.on-eva.io/blob/cda3fb78-ce6d-80f8-4133-80144b3577c1",
+          "is_on_sale": null
+        },
+        {
+          "source": "ldjson",
+          "name": "Gift Card Virtuale",
+          "brand": "",
+          "price": "null",
+          "currency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://www.kikocosmetics.com/it-it/p/digital-gift-card-21632/",
+          "image": "",
+          "is_on_sale": null
+        }
+      ]
+    },
+    {
+      "sourceUrl": "https://www.notino.it/offerte/",
+      "finalUrl": "https://www.notino.it/offerte/",
+      "host": "www.notino.it",
+      "country": "IT",
+      "startedAt": "2025-10-24T20:17:04.877Z",
+      "finishedAt": "2025-10-24T20:17:06.758Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.pinalli.it/it/it/offerte",
+      "finalUrl": "https://www.pinalli.it/it/it/offerte",
+      "host": "www.pinalli.it",
+      "country": "IT",
+      "startedAt": "2025-10-24T20:17:05.901Z",
+      "finishedAt": "2025-10-24T20:17:13.468Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.lasprofumerie.it/it/offerte",
+      "startedAt": "2025-10-24T20:17:06.844Z",
+      "finishedAt": "2025-10-24T20:17:08.064Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.lasprofumerie.it/it/offerte\nCall log:\n  - navigating to \"https://www.lasprofumerie.it/it/offerte\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.sephora.es/beauty-ofertas/",
+      "finalUrl": "https://www.sephora.es/beauty-ofertas/",
+      "host": "www.sephora.es",
+      "country": "ES",
+      "startedAt": "2025-10-24T20:17:08.146Z",
+      "finishedAt": "2025-10-24T20:17:10.061Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.es/es/c/sale/010100",
+      "finalUrl": "https://www.douglas.es/es/c/sale/010100",
+      "host": "www.douglas.es",
+      "country": "ES",
+      "startedAt": "2025-10-24T20:17:10.182Z",
+      "finishedAt": "2025-10-24T20:17:12.055Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.primor.eu/es_es/ofertas",
+      "finalUrl": "https://www.primor.eu/es_es/ofertas",
+      "host": "www.primor.eu",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:12.184Z",
+      "finishedAt": "2025-10-24T20:17:15.026Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.druni.es/ofertas",
+      "finalUrl": "https://www.druni.es/ofertas",
+      "host": "www.druni.es",
+      "country": "ES",
+      "startedAt": "2025-10-24T20:17:12.481Z",
+      "finishedAt": "2025-10-24T20:17:19.725Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.perfumesclub.com/es/ofertas",
+      "finalUrl": "https://www.perfumesclub.com/es/ofertas/",
+      "host": "www.perfumesclub.com",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:13.559Z",
+      "finishedAt": "2025-10-24T20:17:20.418Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.notino.es/oferta/",
+      "finalUrl": "https://www.notino.es/oferta/",
+      "host": "www.notino.es",
+      "country": "ES",
+      "startedAt": "2025-10-24T20:17:15.103Z",
+      "finishedAt": "2025-10-24T20:17:16.823Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.iciparisxl.nl/aanbiedingen",
+      "startedAt": "2025-10-24T20:17:16.949Z",
+      "finishedAt": "2025-10-24T20:17:17.430Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.iciparisxl.nl/aanbiedingen\nCall log:\n  - navigating to \"https://www.iciparisxl.nl/aanbiedingen\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.douglas.nl/nl/c/sale/010100",
+      "finalUrl": "https://www.douglas.nl/nl/c/sale/010100",
+      "host": "www.douglas.nl",
+      "country": "NL",
+      "startedAt": "2025-10-24T20:17:17.557Z",
+      "finishedAt": "2025-10-24T20:17:19.200Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.kruidvat.nl/aanbiedingen",
+      "startedAt": "2025-10-24T20:17:18.944Z",
+      "finishedAt": "2025-10-24T20:17:19.204Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.kruidvat.nl/aanbiedingen\nCall log:\n  - navigating to \"https://www.kruidvat.nl/aanbiedingen\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.etos.nl/aanbiedingen",
+      "startedAt": "2025-10-24T20:17:19.273Z",
+      "finishedAt": "2025-10-24T20:17:19.500Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.etos.nl/aanbiedingen\nCall log:\n  - navigating to \"https://www.etos.nl/aanbiedingen\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.wehkamp.nl/beauty-sale/",
+      "finalUrl": "https://www.wehkamp.nl/beauty-sale/",
+      "host": "www.wehkamp.nl",
+      "country": "NL",
+      "startedAt": "2025-10-24T20:17:19.274Z",
+      "finishedAt": "2025-10-24T20:17:20.959Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.iciparisxl.be/nl/aanbiedingen",
+      "startedAt": "2025-10-24T20:17:19.527Z",
+      "finishedAt": "2025-10-24T20:17:19.891Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.iciparisxl.be/nl/aanbiedingen\nCall log:\n  - navigating to \"https://www.iciparisxl.be/nl/aanbiedingen\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.kruidvat.be/nl/aanbiedingen",
+      "startedAt": "2025-10-24T20:17:19.791Z",
+      "finishedAt": "2025-10-24T20:17:20.148Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.kruidvat.be/nl/aanbiedingen\nCall log:\n  - navigating to \"https://www.kruidvat.be/nl/aanbiedingen\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.di.be/nl/promoties",
+      "finalUrl": "https://www.di.be/nl/promoties",
+      "host": "www.di.be",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:19.959Z",
+      "finishedAt": "2025-10-24T20:17:28.444Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.be/nl/c/sale/010100",
+      "finalUrl": "https://www.douglas.be/nl/c/sale/010100",
+      "host": "www.douglas.be",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:20.191Z",
+      "finishedAt": "2025-10-24T20:17:21.905Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.at/at/c/sale/010100",
+      "finalUrl": "https://www.douglas.at/at/c/sale/010100",
+      "host": "www.douglas.at",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:20.461Z",
+      "finishedAt": "2025-10-24T20:17:22.011Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.marionnaud.at/angebote",
+      "startedAt": "2025-10-24T20:17:21.023Z",
+      "finishedAt": "2025-10-24T20:17:21.364Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.marionnaud.at/angebote\nCall log:\n  - navigating to \"https://www.marionnaud.at/angebote\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.dm.at/angebote",
+      "finalUrl": "https://www.dm.at/angebote",
+      "host": "www.dm.at",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:21.383Z",
+      "finishedAt": "2025-10-24T20:17:26.477Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.bipa.at/angebote",
+      "finalUrl": "https://www.bipa.at/angebote",
+      "host": "www.bipa.at",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:21.926Z",
+      "finishedAt": "2025-10-24T20:17:27.373Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.nivea.at/angebote",
+      "finalUrl": "https://www.nivea.at/angebote",
+      "host": "www.nivea.at",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:22.050Z",
+      "finishedAt": "2025-10-24T20:17:27.746Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.ch/de/c/sale/010100",
+      "finalUrl": "https://www.douglas.ch/de/c/sale/010100",
+      "host": "www.douglas.ch",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:26.584Z",
+      "finishedAt": "2025-10-24T20:17:28.336Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.marionnaud.ch/de/angebote",
+      "startedAt": "2025-10-24T20:17:27.555Z",
+      "finishedAt": "2025-10-24T20:17:27.828Z",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.marionnaud.ch/de/angebote\nCall log:\n  - navigating to \"https://www.marionnaud.ch/de/angebote\", waiting until \"domcontentloaded\"\n"
+      }
+    },
+    {
+      "sourceUrl": "https://www.impo.ch/de/angebote",
+      "finalUrl": "https://www.impo.ch/de/angebote",
+      "host": "www.impo.ch",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:27.784Z",
+      "finishedAt": "2025-10-24T20:17:30.026Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.manor.ch/de/u/beauty-angebote",
+      "finalUrl": "https://www.manor.ch/de/u/beauty-angebote",
+      "host": "www.manor.ch",
+      "country": "UNK",
+      "startedAt": "2025-10-24T20:17:27.878Z",
+      "finishedAt": "2025-10-24T20:17:32.728Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.sephora.pl/wyprzedaz/",
+      "finalUrl": "https://www.sephora.pl/wyprzedaz/",
+      "host": "www.sephora.pl",
+      "country": "PL",
+      "startedAt": "2025-10-24T20:17:28.382Z",
+      "finishedAt": "2025-10-24T20:17:30.001Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.douglas.pl/pl/c/promocje/05",
+      "finalUrl": "https://www.douglas.pl/pl/c/promocje/05",
+      "host": "www.douglas.pl",
+      "country": "PL",
+      "startedAt": "2025-10-24T20:17:28.511Z",
+      "finishedAt": "2025-10-24T20:17:29.997Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.hebe.pl/promocje/",
+      "finalUrl": "https://www.hebe.pl/promocje/",
+      "host": "www.hebe.pl",
+      "country": "PL",
+      "startedAt": "2025-10-24T20:17:30.040Z",
+      "finishedAt": "2025-10-24T20:17:33.166Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.rossmann.pl/promocje",
+      "finalUrl": "https://www.rossmann.pl/promocje",
+      "host": "www.rossmann.pl",
+      "country": "PL",
+      "startedAt": "2025-10-24T20:17:30.051Z",
+      "finishedAt": "2025-10-24T20:17:34.436Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    },
+    {
+      "sourceUrl": "https://www.notino.pl/wyprzedaz/",
+      "finalUrl": "https://www.notino.pl/wyprzedaz/",
+      "host": "www.notino.pl",
+      "country": "PL",
+      "startedAt": "2025-10-24T20:17:30.079Z",
+      "finishedAt": "2025-10-24T20:17:31.741Z",
+      "ok": true,
+      "itemsCount": 0,
+      "items": []
+    }
+  ]
+}

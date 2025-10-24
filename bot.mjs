@@ -1,5 +1,6 @@
-// bot.mjs — BeautyDrop deals scraper (Node 20+, ESM)
-// Çıktılar: data/deals-YYYY-MM-DD.json ve data/deals-latest.json
+// bot.mjs — BeautyDrop deals scraper (Node 20+, ESM, Playwright)
+// Amaç: İndirim odaklı, sayısal alanlara sahip, mobil app'e beslenebilir JSON üretmek.
+// Çıktılar: data/deals-YYYY-MM-DD.json  ve  data/deals-latest.json
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -8,7 +9,7 @@ import crypto from 'node:crypto';
 import { chromium } from 'playwright';
 import pLimit from 'p-limit';
 
-// ===== CLI =====
+// ====== CLI ======
 const args = Object.fromEntries(
   process.argv.slice(2).map(a => {
     const [k, v] = a.split('=');
@@ -16,17 +17,17 @@ const args = Object.fromEntries(
   })
 );
 const HEADLESS     = args.headless !== undefined ? args.headless !== 'false' : true;
-const MAX_PER_PAGE = Number(args.maxPerPage || 60);     // feed'den alınacak sayfa sayısı
-const CONCURRENCY  = Number(args.concurrency || 4);     // aynı anda kaç feed işlenecek
-const DETAIL_LIMIT = Number(args.detailLimit || 8);     // bir liste sayfasından kaç ürün detayına girilecek
+const MAX_PER_PAGE = Number(args.maxPerPage || 60);   // feed'den alınacak sayfa
+const CONCURRENCY  = Number(args.concurrency || 4);   // aynı anda kaç feed
+const DETAIL_LIMIT = Number(args.detailLimit || 10);  // listeden kaç ürün detayına girilecek
 
-// ===== Paths =====
+// ====== Paths ======
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const FEEDS_TXT  = path.join(__dirname, 'feeds', 'beautydrop-feeds.txt');
 const DATA_DIR   = path.join(__dirname, 'data');
 
-// ===== Utils =====
+// ====== Utils ======
 async function ensureDir(dir) { await fs.mkdir(dir, { recursive: true }); }
 function isoDay() { return new Date().toISOString().slice(0, 10); }
 function sha1(x) { return crypto.createHash('sha1').update(String(x)).digest('hex'); }
@@ -35,35 +36,54 @@ function uniq(arr) { return Array.from(new Set(arr)); }
 
 function guessCountryFromHost(host) {
   const h = host.toLowerCase();
+  if (h.endsWith('.tr')) return 'TR';
   if (h.endsWith('.de')) return 'DE';
   if (h.endsWith('.fr')) return 'FR';
   if (h.endsWith('.it')) return 'IT';
   if (h.endsWith('.es')) return 'ES';
   if (h.endsWith('.nl')) return 'NL';
+  if (h.endsWith('.be')) return 'BE';
+  if (h.endsWith('.at')) return 'AT';
+  if (h.endsWith('.ch')) return 'CH';
   if (h.endsWith('.pl')) return 'PL';
+  if (h.endsWith('.cz')) return 'CZ';
+  if (h.endsWith('.sk')) return 'SK';
+  if (h.endsWith('.hu')) return 'HU';
   if (h.endsWith('.ro')) return 'RO';
-  if (h.endsWith('.tr')) return 'TR';
+  if (h.endsWith('.bg')) return 'BG';
+  if (h.endsWith('.gr')) return 'GR';
+  if (h.endsWith('.pt')) return 'PT';
+  if (h.endsWith('.dk')) return 'DK';
+  if (h.endsWith('.se')) return 'SE';
+  if (h.endsWith('.no')) return 'NO';
+  if (h.endsWith('.fi')) return 'FI';
+  if (h.endsWith('.ie')) return 'IE';
   if (h.endsWith('.co.uk') || h.endsWith('.uk')) return 'UK';
   return null;
 }
+function defaultCurrencyForCountry(country) {
+  const map = {
+    TR: 'TRY', DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR',
+    BE: 'EUR', AT: 'EUR', CH: 'CHF', PL: 'PLN', CZ: 'CZK', SK: 'EUR',
+    HU: 'HUF', RO: 'RON', BG: 'BGN', GR: 'EUR', PT: 'EUR', DK: 'DKK',
+    SE: 'SEK', NO: 'NOK', FI: 'EUR', IE: 'EUR', UK: 'GBP'
+  };
+  return map[country] || null;
+}
 
-// ---- feeds.txt parser (Ad | URL dahil her formu destekler) ----
+// ---- feeds.txt parser (satır içindeki ilk URL'i yakalar; "Ad | URL" dahil) ----
 function parseFeedsTxt(txt) {
   const urls = [];
   for (let raw of txt.split(/\r?\n/)) {
     let l = (raw || '').trim();
     if (!l) continue;
-    // satır sonu açıklama temizle (#, //)
-    l = l.replace(/\s+#.*$/, '').replace(/\s+\/\/.*$/, '').trim();
+    l = l.replace(/\s+#.*$/, '').replace(/\s+\/\/.*$/, '').trim(); // satır sonu yorum
     if (!l || l.startsWith('#') || l.startsWith('//')) continue;
-
-    // satırdaki ilk URL'i yakala (Ad | URL, URL | Ad, vb.)
     const m = l.match(/https?:\/\/\S+/i);
     if (m) urls.push(m[0]);
   }
   return uniq(urls);
 }
-
 async function readFeeds(file) {
   try {
     const t = await fs.readFile(file, 'utf8');
@@ -79,11 +99,56 @@ async function readFeeds(file) {
   }
 }
 
-function safeJsonParse(txt) {
-  try { return JSON.parse(txt); } catch { return null; }
+// ---- price helpers ----
+function parseNumberLocalized(input) {
+  if (input == null) return null;
+  let s = String(input).replace(/\s/g, '').replace(/[^\d,.\-]/g, '');
+  // Eğer hem virgül hem nokta varsa: son görülen ayırıcıyı ondalık say
+  if (s.includes(',') && s.includes('.')) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56 -> 1234.56
+    } else {
+      s = s.replace(/,/g, ''); // 1,234.56 -> 1234.56
+    }
+  } else if (s.includes(',')) {
+    // Sadece virgül varsa onu ondalığa çevir
+    s = s.replace(',', '.');
+  }
+  const val = Number(s);
+  return Number.isFinite(val) ? val : null;
+}
+function detectCurrencyFromText(txt) {
+  if (!txt) return null;
+  const s = txt.toUpperCase();
+  if (/[€]/.test(txt)) return 'EUR';
+  if (/[£]/.test(txt)) return 'GBP';
+  if (/[$]/.test(txt)) return 'USD'; // varsayımsal
+  if (/PLN|ZŁ/.test(s)) return 'PLN';
+  if (/CHF/.test(s)) return 'CHF';
+  if (/CZK|KČ/.test(s)) return 'CZK';
+  if (/HUF|FT/.test(s)) return 'HUF';
+  if (/RON|LEI/.test(s)) return 'RON';
+  if (/BGN/.test(s)) return 'BGN';
+  if (/DKK/.test(s)) return 'DKK';
+  if (/SEK/.test(s)) return 'SEK';
+  if (/NOK/.test(s)) return 'NOK';
+  if (/TRY|TL/.test(s)) return 'TRY';
+  if (/GBP/.test(s)) return 'GBP';
+  if (/EUR/.test(s)) return 'EUR';
+  return null;
+}
+function computeDiscount(priceNew, priceOld) {
+  if (priceNew == null || priceOld == null) return null;
+  if (!Number.isFinite(priceNew) || !Number.isFinite(priceOld)) return null;
+  if (priceOld <= 0 || priceNew >= priceOld) return null;
+  const pct = ((priceOld - priceNew) / priceOld) * 100;
+  return Math.round(pct * 10) / 10; // 1 ondalık
 }
 
-function extractProductsFromLdJson(html, baseUrl) {
+// ---- HTML parsers ----
+function safeJsonParse(txt) { try { return JSON.parse(txt); } catch { return null; } }
+
+function extractProductsFromLdJson(html, baseUrl, host, country) {
   const items = [];
   const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let m;
@@ -106,26 +171,51 @@ function extractProductsFromLdJson(html, baseUrl) {
         const offers = g.offers ? (Array.isArray(g.offers) ? g.offers : [g.offers]) : [];
         if (!offers.length) {
           items.push({
-            source: 'ldjson', name: trim(name,180), brand: trim(brand,80),
-            price: null, currency: null, availability: null, url, image, is_on_sale: null
+            source: 'ldjson',
+            name: trim(name, 180),
+            brand: trim(brand, 80),
+            price_new: null,
+            price_old: null,
+            discount_pct: null,
+            currency: null,
+            availability: null,
+            url,
+            image,
+            store: host,
+            country
           });
           continue;
         }
         for (const ofr of offers) {
-          const price = ofr.price ?? ofr.lowPrice ?? ofr.highPrice ?? null;
-          const curr  = ofr.priceCurrency ?? null;
-          const old   = ofr.priceSpecification?.price ?? ofr.listPrice ?? ofr.highPrice ?? null;
-          const isOn  = (price && old && Number(price) < Number(old)) ? true : null;
+          // LD-JSON çoğunlukla numeric/detaylıdır
+          const pNewStr = ofr.price ?? ofr.lowPrice ?? ofr.highPrice ?? null;
+          const pNewNum = typeof pNewStr === 'number' ? pNewStr : parseNumberLocalized(pNewStr);
+          const curr    = ofr.priceCurrency || null;
+
+          // Eski fiyatı yakalamaya çalış: listPrice / highPrice > price
+          const pOldCand =
+            ofr.listPrice ??
+            (typeof ofr.highPrice === 'number' ? ofr.highPrice : null) ??
+            (ofr.priceSpecification && ofr.priceSpecification.price ? ofr.priceSpecification.price : null);
+
+          const pOldNum = typeof pOldCand === 'number' ? pOldCand : parseNumberLocalized(pOldCand);
+          const price_old = (pNewNum != null && pOldNum != null && pOldNum > pNewNum) ? pOldNum : null;
+
+          const discount_pct = computeDiscount(pNewNum ?? null, price_old);
 
           items.push({
             source: 'ldjson',
-            name: trim(name,180),
-            brand: trim(brand,80),
-            price: price !== undefined ? String(price) : null,
+            name: trim(name, 180),
+            brand: trim(brand, 80),
+            price_new: pNewNum ?? null,
+            price_old,
+            discount_pct,
             currency: curr,
             availability: ofr.availability ?? null,
-            url, image,
-            is_on_sale: isOn
+            url,
+            image,
+            store: host,
+            country
           });
         }
       }
@@ -134,24 +224,30 @@ function extractProductsFromLdJson(html, baseUrl) {
   return items;
 }
 
-function extractProductsFromOg(html, baseUrl) {
+function extractProductsFromOg(html, baseUrl, host, country) {
+  // OG product meta — tek ürün sayfalarında işe yarar
   const out = [];
   const amt   = html.match(/<meta[^>]+property=["']product:price:amount["'][^>]*content=["']([^"']+)["']/i);
   const curr  = html.match(/<meta[^>]+property=["']product:price:currency["'][^>]*content=["']([^"']+)["']/i);
   const title = html.match(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
   const img   = html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
 
-  if (amt && curr) {
+  if (amt) {
+    const priceNewNum = parseNumberLocalized(amt[1]);
+    const currency = (curr && curr[1]) ? curr[1] : detectCurrencyFromText(amt[1]);
     out.push({
       source: 'og',
       name: trim(title?.[1] || '', 180),
       brand: null,
-      price: String(amt[1]),
-      currency: curr[1],
+      price_new: priceNewNum,
+      price_old: null,
+      discount_pct: null,
+      currency,
       availability: null,
       url: baseUrl,
       image: img?.[1] || null,
-      is_on_sale: null
+      store: host,
+      country
     });
   }
   return out;
@@ -161,7 +257,7 @@ function dedupe(items) {
   const seen = new Set();
   const out  = [];
   for (const it of items) {
-    const key = sha1(`${it.name}|${it.price}|${it.currency}|${it.url}`);
+    const key = sha1(`${(it.name||'').toLowerCase()}|${it.url}|${it.price_new ?? ''}|${it.currency ?? ''}`);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(it);
@@ -169,15 +265,16 @@ function dedupe(items) {
   return out;
 }
 
-async function scrapeDetail(context, href) {
+// ---- Navigation helpers ----
+async function scrapeDetail(context, href, host, country) {
   const p = await context.newPage();
   try {
     await p.goto(href, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await p.waitForTimeout(400);
     const html = await p.content();
     const finalUrl = p.url();
-    const ld = extractProductsFromLdJson(html, finalUrl);
-    const og = extractProductsFromOg(html, finalUrl);
+    const ld = extractProductsFromLdJson(html, finalUrl, host, country);
+    const og = extractProductsFromOg(html, finalUrl, host, country);
     const items = dedupe([...ld, ...og]);
     return { ok: true, url: href, finalUrl, items };
   } catch (err) {
@@ -185,6 +282,63 @@ async function scrapeDetail(context, href) {
   } finally {
     await p.close().catch(() => {});
   }
+}
+
+async function findProductLinks(page) {
+  // Heuristik + yaygın kart seçicileri
+  const selectors = [
+    'a.product-link',
+    'a.product-card',
+    'a.ProductCard__link',
+    'a.c-product-card__link',
+    '.product a[href]',
+    '.product-card a[href]',
+    '.product-item a[href]',
+    '.grid-product a[href]',
+    'a[href*="/product"]',
+    'a[href*="/produkte"]',
+    'a[href*="/producto"]',
+    'a[href*="/produkt"]',
+    'a[href*="/p/"]'
+  ];
+
+  // Çok geniş tarama: tüm <a>’ları al, filtrele
+  const broadLinks = await page.$$eval('a', as => {
+    const hrefs = [];
+    for (const a of as) {
+      const href = a.href || a.getAttribute('href') || '';
+      if (!href) continue;
+      if (!/^https?:\/\//i.test(href)) continue;
+      const t = href.toLowerCase();
+      if (
+        t.includes('/product') ||
+        t.includes('/produkte') ||
+        t.includes('/producto') ||
+        t.includes('/produkt') ||
+        /\/p\/[a-z0-9]/.test(t) ||
+        /\/\d{4,}/.test(t)
+      ) {
+        hrefs.push(href);
+      }
+    }
+    return Array.from(new Set(hrefs));
+  });
+
+  // Spesifik seçiciler (daha güvenilir)
+  const matched = new Set(broadLinks);
+  for (const sel of selectors) {
+    try {
+      const links = await page.$$eval(sel, els =>
+        Array.from(new Set(
+          els
+            .map(e => (e.href || e.getAttribute('href') || ''))
+            .filter(h => /^https?:\/\//i.test(h))
+        ))
+      );
+      for (const l of links) matched.add(l);
+    } catch { /* selector yoksa geç */ }
+  }
+  return Array.from(matched);
 }
 
 async function scrapeUrl(url) {
@@ -199,55 +353,45 @@ async function scrapeUrl(url) {
     await page.evaluate(() => window.scrollBy(0, 1500));
     await page.waitForTimeout(400);
 
-    // 1) Liste sayfasının kendisinden ürün verisi (nadiren)
     const listHtml  = await page.content();
     const listUrl   = page.url();
     const host      = new URL(listUrl).host;
     const country   = guessCountryFromHost(host) || 'UNK';
 
+    // 1) Liste sayfasının kendisinden yakalanabilen ürünler (nadir)
     let items = dedupe([
-      ...extractProductsFromLdJson(listHtml, listUrl),
-      ...extractProductsFromOg(listHtml, listUrl)
+      ...extractProductsFromLdJson(listHtml, listUrl, host, country),
+      ...extractProductsFromOg(listHtml, listUrl, host, country)
     ]);
 
-    // 2) Ürün linklerini bul ve ilk N tanesini detaydan çek
-    let productLinks = await page.$$eval('a', as => {
-      const hrefs = [];
-      for (const a of as) {
-        const href = a.href || a.getAttribute('href') || '';
-        if (!href) continue;
-        if (href.startsWith('javascript:')) continue;
-        // sadece tam URL
-        const abs = href.startsWith('http://') || href.startsWith('https://');
-        if (!abs) continue;
-        const t = href.toLowerCase();
-        // geniş ama güvenli heuristikler
-        if (
-          t.includes('/product') ||
-          t.includes('/produkte') ||
-          t.includes('/produs') ||
-          t.includes('/producto') ||
-          t.includes('/p/') ||
-          /\/\d{4,}/.test(t) // bazı sitelerde ürün id'leri
-        ) {
-          hrefs.push(href);
-        }
-      }
-      return Array.from(new Set(hrefs));
-    });
-
+    // 2) Ürün linklerini bul → ilk N tanesini detaydan topla
+    let productLinks = await findProductLinks(page);
     productLinks = productLinks.slice(0, DETAIL_LIMIT);
 
     const lim = pLimit(Math.min(DETAIL_LIMIT, 4));
     const detailResults = await Promise.all(
-      productLinks.map(href => lim(() => scrapeDetail(context, href)))
+      productLinks.map(href => lim(() => scrapeDetail(context, href, host, country)))
     );
-
     for (const r of detailResults) {
       if (r.ok && r.items?.length) items.push(...r.items);
     }
 
-    items = dedupe(items).slice(0, 50); // güvenli üst limit
+    // 3) Para birimi eksikse ülke varsayılanı ile doldur
+    const fallbackCurrency = defaultCurrencyForCountry(country);
+    items = items.map(it => ({
+      ...it,
+      currency: it.currency || fallbackCurrency || it.currency
+    }));
+
+    // 4) Son temizlik
+    items = dedupe(items)
+      .filter(it => it.name && it.url)
+      .map(it => {
+        // Net indirim yüzdesi yoksa (price_old&price_new varsa) hesapla
+        const discount_pct = computeDiscount(it.price_new, it.price_old);
+        return { ...it, discount_pct };
+      })
+      .slice(0, 50);
 
     return {
       sourceUrl: url,
@@ -274,6 +418,7 @@ async function scrapeUrl(url) {
   }
 }
 
+// ====== Main ======
 async function main() {
   await ensureDir(DATA_DIR);
   const feeds = await readFeeds(FEEDS_TXT);
@@ -294,7 +439,7 @@ async function main() {
   console.log(`[info] ${feeds.length} feed | headless=${HEADLESS} | cc=${CONCURRENCY} | detailLimit=${DETAIL_LIMIT}`);
 
   const limit = pLimit(CONCURRENCY);
-  const results = await Promise.all(feeds.map(u => limit(() => scrapeUrl(u))));
+  const results = await Promise.all(feeds.slice(0, MAX_PER_PAGE).map(u => limit(() => scrapeUrl(u))));
 
   const out = {
     date: day,

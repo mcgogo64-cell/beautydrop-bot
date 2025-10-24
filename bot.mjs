@@ -204,6 +204,80 @@ function sanitizeDeal(deal) {
   };
 }
 
+
+/* --- Robust feeds parser (drop-in replacement) --- */
+function parseFeedsTxt(txt) {
+  // 1) Normalize: remove BOM, convert CRLF to LF, replace non-breaking spaces with spaces
+  txt = String(txt || '')
+    .replace(/^\uFEFF/, '')                 // UTF‑8 BOM
+    .replace(/\r\n?/g, '\n')               // CRLF/CR -> LF
+    .replace(/\u00A0/g, ' ');               // NBSP -> space
+
+  const tldToCountry = {
+    'de':'DE','fr':'FR','it':'IT','es':'ES','tr':'TR','pl':'PL','ro':'RO','nl':'NL',
+    'cz':'CZ','sk':'SK','at':'AT','ch':'CH','uk':'GB','gb':'GB','ie':'IE','se':'SE',
+    'dk':'DK','no':'NO','fi':'FI','pt':'PT','gr':'GR','hu':'HU'
+  };
+
+  const lines = txt.split('\n');
+  const out = [];
+  const seen = new Set();
+  let country = null;
+
+  const normSpace = (s='') => s.replace(/\s+/g,' ').trim();
+
+  for (let raw of lines) {
+    let line = raw.trim();
+
+    // 2) Skip comment/empty lines: '#', '//', ';' denote comments
+    if (!line || /^#|^;|^\/\//.test(line)) continue;
+
+    // 3) Section header like "[DE]" with optional spaces or CR; match anywhere in line
+    const mCountry = line.match(/\[([A-Za-z]{2})\]/);
+    if (mCountry) { country = mCountry[1].toUpperCase(); continue; }
+
+    // 4) Split "Name | URL" by the first '|' only
+    const firstPipe = line.indexOf('|');
+    if (firstPipe === -1) {
+      // If no pipe, treat entire line as URL; guess name from domain
+      const maybeUrl = line;
+      const nameGuess = normSpace(maybeUrl.replace(/^https?:\/\//, '').split('/')[0]);
+      addEntry(nameGuess, maybeUrl, country);
+      continue;
+    }
+    const name = normSpace(line.slice(0, firstPipe));
+    const url = normSpace(line.slice(firstPipe + 1));
+    addEntry(name, url, country);
+  }
+
+  return out;
+
+  // helper: validate and push entry, deduplicate by country+URL
+  function addEntry(name, url, countryFromHeader) {
+    if (!url) return;
+    let u;
+    try { u = new URL(url); }
+    catch { console.warn(`⚠️  Invalid URL skipped: ${url}`); return; }
+
+    // Determine country: use section header or guess from TLD
+    let c = countryFromHeader || null;
+    if (!c) {
+      const host = u.hostname.toLowerCase();
+      const tld = (host.split('.').pop() || '').replace(/[^a-z]/g,'');
+      if (tldToCountry[tld]) c = tldToCountry[tld];
+    }
+    if (!c) {
+      console.warn(`⚠️  Country could not be determined for URL: ${url}`);
+      return;
+    }
+
+    const key = `${c}|${u.href}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ country: c, name: name || u.hostname, url: u.href });
+  }
+}
+
 // === 4) MAIN ===
 async function main() {
   ensureDir(DATA_DIR);

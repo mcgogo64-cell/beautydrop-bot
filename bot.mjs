@@ -58,26 +58,8 @@ const MEN_NEG = new RegExp(
 );
 
 // === 1) FEEDS TXT PARSER ===
-function parseFeedsTxt(txt) {
-  const lines = txt.split('\n');
-  const out = [];
-  let country = null;
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line || line.startsWith('#')) continue;
-    const mCountry = line.match(/^\[([A-Z]{2})\]$/);
-    if (mCountry) { country = mCountry[1]; continue; }
-    const parts = line.split('|');
-    if (parts.length >= 2 && country) {
-      const name = normSpace(parts[0]);
-      const url = normSpace(parts.slice(1).join('|'));
-      out.push({ country, name, url });
-    }
-  }
-  return out;
-}
-
-// === 2) DOMAIN-BAZLI SELECTOR OVERRIDES ===
+//fu removed duplicate parseFeedsTxt
+=== 2) DOMAIN-BAZLI SELECTOR OVERRIDES ===
 const OVERRIDES = [
   { hostRe: /douglas\./, card: ['.product-tile','article','.product','.product-item'], title: ['.product-title','[class*=title]','a[title]','h3'], price: ['[class*=price]','.price','[data-test*=price]'], image: ['img'] },
   { hostRe: /flaconi\./, card: ['article','.product-card','.ProductTile'], title: ['h3','[class*="title"]','a[title]'], price: ['[class*=price]','.price'], image: ['img'] },

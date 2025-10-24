@@ -5,12 +5,13 @@ on:
     - cron: "0 3 * * *"  # Her gece 03:00 UTC
   workflow_dispatch:     # Elle tetikleme
 
-permissions:
-  contents: write
-  concurrency:
+concurrency:
   group: daily-scrape
   cancel-in-progress: false
-
+  
+permissions:
+  contents: write
+ 
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -18,9 +19,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
               with:
-        fetch-depth: 0
-        persist-credentials: true
-
+with:with:
+          fetch-depth: 0
+          persist-credentials: true
       - name: Setup Node
         uses: actions/setup-node@v4
         with:

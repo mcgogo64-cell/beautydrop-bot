@@ -20,7 +20,7 @@ https://www.trendyol.com/kozmetik-saglik?os=1
 https://www.hepsiburada.com/indirim/kozmetik
 https://www.n11.com/kozmetik-kisisel-bakim?indirimli=1
 
-# (İstersen, doğrudan mağaza sayfalarını da aktif tutabilirsin)
+# (İstersen mağaza sayfalarını da aktif tutabilirsin)
 # https://www.sephora.com.tr/sephora-kampanyalar.html
 # https://www.rossmann.com.tr/indirimli-urunler
 # https://www.gratis.com/kampanyalar

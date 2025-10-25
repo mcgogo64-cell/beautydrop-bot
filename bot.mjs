@@ -1,12 +1,18 @@
 // bot.mjs — BeautyDrop deals scraper (Node 20+, ESM, Playwright)
-// Odak: fiyat yakalama güvenilirliği (LD+JSON → Microdata → OG → DOM → Script JSON).
+// Odak: "0 ürün" ve fiyat/ülke hatalarını bitirmek için:
+// - Gelişmiş consent (iframe dahil)
+// - Listing sayfalarında auto-scroll + "Load more" tıklama + basit sayfalama
+// - LD+JSON → OG → Microdata → Görünür DOM → Script JSON sıralaması
+// - Ülke çözümleyici (TLD + path/language heuristics)
+// - Locale-aware fiyat ayrıştırma + mantık (sanity) filtresi
+// - HTTP/2 hatalarında Firefox fallback
 // Çıktılar: data/deals-YYYY-MM-DD.json  ve  data/deals-latest.json
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
-import { chromium } from 'playwright';
+import { chromium, firefox } from 'playwright';
 import pLimit from 'p-limit';
 
 // ===== CLI =====
@@ -16,10 +22,12 @@ const args = Object.fromEntries(
     return [k.replace(/^--/, ''), v === undefined ? true : v];
   })
 );
-const HEADLESS     = args.headless !== undefined ? args.headless !== 'false' : true;
-const MAX_PER_PAGE = Number(args.maxPerPage || 60);
-const CONCURRENCY  = Number(args.concurrency || 4);
-const DETAIL_LIMIT = Number(args.detailLimit || 10);
+const HEADLESS      = args.headless !== undefined ? args.headless !== 'false' : true;
+const MAX_PER_PAGE  = Number(args.maxPerPage || 60);   // Maks. feed URL adedi
+const CONCURRENCY   = Number(args.concurrency || 4);   // Aynı anda kaç feed
+const DETAIL_LIMIT  = Number(args.detailLimit || 12);  // Bir listingten açılacak ürün sayısı
+const MAX_SCROLLS   = Number(args.maxScrolls || 6);    // Listingte kaç kez auto-scroll
+const TRY_PAGINATE  = args.tryPaginate !== 'false';    // ?page=2.. denensin mi
 
 // ===== Paths =====
 const __filename = fileURLToPath(import.meta.url);
@@ -34,61 +42,61 @@ function sha1(x) { return crypto.createHash('sha1').update(String(x)).digest('he
 function trim(s, n = 200) { return s ? (s.length > n ? s.slice(0, n) + '…' : s) : ''; }
 function uniq(arr) { return Array.from(new Set(arr)); }
 
-function guessCountryFromHost(host) {
-  const h = host.toLowerCase();
-  if (h.endsWith('.tr')) return 'TR';
-  if (h.endsWith('.de')) return 'DE';
-  if (h.endsWith('.fr')) return 'FR';
-  if (h.endsWith('.it')) return 'IT';
-  if (h.endsWith('.es')) return 'ES';
-  if (h.endsWith('.nl')) return 'NL';
-  if (h.endsWith('.be')) return 'BE';
-  if (h.endsWith('.at')) return 'AT';
-  if (h.endsWith('.ch')) return 'CH';
-  if (h.endsWith('.pl')) return 'PL';
-  if (h.endsWith('.cz')) return 'CZ';
-  if (h.endsWith('.sk')) return 'SK';
-  if (h.endsWith('.hu')) return 'HU';
-  if (h.endsWith('.ro')) return 'RO';
-  if (h.endsWith('.bg')) return 'BG';
-  if (h.endsWith('.gr')) return 'GR';
-  if (h.endsWith('.pt')) return 'PT';
-  if (h.endsWith('.dk')) return 'DK';
-  if (h.endsWith('.se')) return 'SE';
-  if (h.endsWith('.no')) return 'NO';
-  if (h.endsWith('.fi')) return 'FI';
-  if (h.endsWith('.ie')) return 'IE';
-  if (h.endsWith('.co.uk') || h.endsWith('.uk')) return 'UK';
-  return null;
+function resolveCountry(url) {
+  // TLD + path/dil kodu ipuçları (es_es, it-it, gb/en, vb.)
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./,'').toLowerCase();
+    const tld = host.split('.').pop();
+    const pathLow = u.pathname.toLowerCase();
+
+    const tldMap = { de:'DE', tr:'TR', fr:'FR', it:'IT', es:'ES', nl:'NL', be:'BE', at:'AT', ch:'CH',
+                     pl:'PL', cz:'CZ', sk:'SK', hu:'HU', ro:'RO', bg:'BG', gr:'GR', pt:'PT',
+                     dk:'DK', se:'SE', no:'NO', fi:'FI', ie:'IE', uk:'UK' };
+    // Path tabanlı dil/ülke
+    if (host.endsWith('primor.eu')     && pathLow.includes('/es_es/')) return 'ES';
+    if (host.endsWith('kikocosmetics.com') && pathLow.includes('/it-it/')) return 'IT';
+    if (host.endsWith('gratis.com')    && pathLow.includes('/kampanyalar')) return 'TR';
+    if (host.endsWith('sephora.co.uk') && (pathLow.includes('/gb/en') || pathLow.includes('/en-gb'))) return 'UK';
+
+    // Boots/Lookfantastic/Cultbeauty/Beautybay UK gibi .com → UK
+    if (/(boots|lookfantastic|cultbeauty|beautybay)\.com$/.test(host)) return 'UK';
+
+    // TLD fallback
+    return tldMap[tld] || 'UNK';
+  } catch {
+    return 'UNK';
+  }
 }
+
 function defaultCurrencyForCountry(country) {
   const map = {
-    TR: 'TRY', DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR',
-    BE: 'EUR', AT: 'EUR', CH: 'CHF', PL: 'PLN', CZ: 'CZK', SK: 'EUR',
-    HU: 'HUF', RO: 'RON', BG: 'BGN', GR: 'EUR', PT: 'EUR', DK: 'DKK',
-    SE: 'SEK', NO: 'NOK', FI: 'EUR', IE: 'EUR', UK: 'GBP'
+    TR:'TRY', DE:'EUR', FR:'EUR', IT:'EUR', ES:'EUR', NL:'EUR', BE:'EUR', AT:'EUR', CH:'CHF',
+    PL:'PLN', CZ:'CZK', SK:'EUR', HU:'HUF', RO:'RON', BG:'BGN', GR:'EUR', PT:'EUR',
+    DK:'DKK', SE:'SEK', NO:'NOK', FI:'EUR', IE:'EUR', UK:'GBP'
   };
   return map[country] || null;
 }
+
 function parseNumberLocalized(input) {
   if (input == null) return null;
-  let s = String(input);
-  // HTML entities vs. whitespace temizliği
-  s = s.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-  // Para sembol ve harfleri ayıkla fakat ayırıcıları koru
+  let s = String(input)
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/['’]/g, '')   // CHF vb. için apostrof binlikleri kaldır
+    .trim();
+
+  // Sembolleri/harfleri temizle ama ayırıcıları koru
   s = s.replace(/[^\d,.\-]/g, '');
   if (s.includes(',') && s.includes('.')) {
-    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
-      s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56 → 1234.56
-    } else {
-      s = s.replace(/,/g, '');                    // 1,234.56 → 1234.56
-    }
-  } else if (s.includes(',')) {
-    s = s.replace(',', '.');
-  }
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56 → 1234.56
+    else s = s.replace(/,/g, ''); // 1,234.56 → 1234.56
+  } else if (s.includes(',')) s = s.replace(',', '.');
+
   const val = Number(s);
   return Number.isFinite(val) ? val : null;
 }
+
 function detectCurrencyFromText(txt) {
   if (!txt) return null;
   const s = txt.toUpperCase();
@@ -106,12 +114,20 @@ function detectCurrencyFromText(txt) {
   if (/TRY|TL/.test(s)) return 'TRY';
   return null;
 }
+
 function computeDiscount(priceNew, priceOld) {
   if (priceNew == null || priceOld == null) return null;
   if (!Number.isFinite(priceNew) || !Number.isFinite(priceOld)) return null;
   if (priceOld <= 0 || priceNew >= priceOld) return null;
   const pct = ((priceOld - priceNew) / priceOld) * 100;
   return Math.round(pct * 10) / 10;
+}
+
+function isSanePrice(value, currency) {
+  if (!Number.isFinite(value) || value <= 0) return false;
+  const caps = { EUR: 2000, USD: 2000, GBP: 1800, PLN: 8000, HUF: 300000, RON: 10000, TRY: 200000, CHF: 2200, CZK: 50000, DKK: 15000, SEK: 20000, NOK: 20000 };
+  const cap = caps[currency || 'EUR'] || 2000;
+  return value <= cap;
 }
 
 // ---- feeds parser (satır içindeki ilk URL'i yakalar; "Ad | URL" dahil) ----
@@ -142,7 +158,7 @@ async function readFeeds(file) {
   }
 }
 
-// ===== DOM extractors =====
+// ===== Extractors =====
 function safeJsonParse(txt) { try { return JSON.parse(txt); } catch { return null; } }
 
 function extractFromLdJson(html, baseUrl, host, country) {
@@ -225,15 +241,12 @@ function extractFromOg(html, baseUrl, host, country) {
   return out;
 }
 
-// Fallback: görünür DOM + microdata/meta + script JSON tarama
 async function extractFromDom(page, host, country) {
   return await page.evaluate(() => {
-    function txt(el) {
-      return (el && (el.textContent || '').trim()) || '';
-    }
+    function txt(el) { return (el && (el.textContent || '').trim()) || ''; }
     function getNum(s) {
       if (!s) return null;
-      let v = s.replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+      let v = s.replace(/&nbsp;/g,' ').replace(/\s+/g,' ').replace(/['’]/g,'').trim();
       v = v.replace(/[^\d,.\-]/g,'');
       if (v.includes(',') && v.includes('.')) {
         if (v.lastIndexOf(',') > v.lastIndexOf('.')) v = v.replace(/\./g,'').replace(',', '.');
@@ -302,7 +315,7 @@ async function extractFromDom(page, host, country) {
       out.push({ source:'dom-visible', name, brand:null, price_new, price_old:null, discount_pct:null, currency, availability:null, url:location.href, image });
     }
 
-    // 3) Script içi JSON taraması ("price": 123 gibi)
+    // 3) Script içi JSON ("price": 123)
     const scriptTexts = Array.from(document.querySelectorAll('script:not([src])')).map(s => s.textContent || '');
     for (const s of scriptTexts) {
       const m = s.match(/"price"\s*:\s*"?([\d.,\s]+)"?/i);
@@ -333,7 +346,6 @@ async function extractFromDom(page, host, country) {
     }
     const oldPrice = findOldPrice();
 
-    // Tüm kayıtların price_old'u yoksa bir kısmına uygula (aynı sayfadaki belirgin durumlar için)
     if (oldPrice != null) {
       for (const it of out) {
         if (it.price_old == null && it.price_new != null && oldPrice > it.price_new) {
@@ -349,16 +361,19 @@ async function extractFromDom(page, host, country) {
 }
 
 // ===== Playwright helpers =====
-async function launchBrowser() {
-  return await chromium.launch({
+async function launchBrowser(engine = 'chromium') {
+  const common = {
     headless: HEADLESS,
     args: [
       '--no-sandbox',
       '--disable-dev-shm-usage',
       '--disable-blink-features=AutomationControlled'
     ]
-  });
+  };
+  if (engine === 'firefox') return await firefox.launch(common);
+  return await chromium.launch(common);
 }
+
 const DEFAULT_HEADERS = {
   'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8,tr;q=0.7,fr;q=0.6',
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -370,27 +385,35 @@ async function newContext(browser) {
     ignoreHTTPSErrors: true,
     viewport: { width: 1366, height: 900 }
   });
-  // webdriver fingerprint azaltma
   await ctx.addInitScript(() => {
     Object.defineProperty(navigator, 'webdriver', { get: () => false });
   });
   return ctx;
 }
 
-async function autoConsent(page) {
+async function clickConsentIn(pageLike) {
   const selectors = [
     'button:has-text("Accept")','button:has-text("I agree")','button:has-text("Allow all")',
     'button:has-text("Akzeptieren")','button:has-text("Alle akzeptieren")','button:has-text("Zustimmen")',
     'button:has-text("Tout accepter")','button:has-text("Accepter")',
     'button:has-text("Aceptar")','button:has-text("Aceptar todo")',
     'button:has-text("Kabul et")','button:has-text("Tümünü kabul et")',
-    'button[aria-label*="accept" i]','button[aria-label*="Akzeptieren" i]'
+    'button[aria-label*="accept" i]','button[aria-label*="Akzeptieren" i]',
+    '[role="dialog"] button:has-text("Accept")'
   ];
   for (const sel of selectors) {
     try {
-      const btn = await page.$(sel);
-      if (btn) { await btn.click({ timeout: 500 }); await page.waitForTimeout(200); }
+      const btn = await pageLike.$(sel);
+      if (btn) { await btn.click({ timeout: 800 }); await pageLike.waitForTimeout(250); }
     } catch {}
+  }
+}
+
+async function autoConsent(page) {
+  await clickConsentIn(page);
+  // iframe içindeki CMP
+  for (const f of page.frames()) {
+    try { await clickConsentIn(f); } catch {}
   }
 }
 
@@ -400,20 +423,38 @@ async function gotoWithRetry(page, url) {
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await autoConsent(page);
-      // kısa scroll + network sakinliği
-      await page.waitForTimeout(700);
-      await page.evaluate(() => window.scrollBy(0, 1600));
-      await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(()=>{});
       return;
     } catch (e) {
       lastErr = e;
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(700);
     }
   }
   throw lastErr;
 }
 
-// ===== Scraping =====
+async function autoScrollAndLoadMore(page, { maxScrolls = MAX_SCROLLS } = {}) {
+  const moreBtns = [
+    'button:has-text("Load more")',
+    'button:has-text("Mehr")',
+    'button:has-text("Mehr anzeigen")',
+    'button:has-text("Daha fazla")',
+    'button:has-text("Tümünü göster")',
+    'button:has-text("Weitere Anzeigen")',
+  ];
+  for (let i=0;i<maxScrolls;i++){
+    try {
+      await page.evaluate(() => window.scrollBy(0, document.body.scrollHeight));
+      await page.waitForTimeout(600);
+      // varsa "daha fazla"yı tıkla
+      for (const sel of moreBtns) {
+        const btn = await page.$(sel).catch(()=>null);
+        if (btn) { await btn.click().catch(()=>{}); await page.waitForTimeout(800); }
+      }
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(()=>{});
+    } catch {}
+  }
+}
+
 function dedupe(items) {
   const seen = new Set();
   const out  = [];
@@ -445,7 +486,8 @@ async function findProductLinks(page) {
 
   const selectors = [
     'a.product-link','a.product-card','a.ProductCard__link','a.c-product-card__link',
-    '.product a[href]','.product-card a[href]','.product-item a[href]','.grid-product a[href]'
+    '.product a[href]','.product-card a[href]','.product-item a[href]','.grid-product a[href]',
+    'a[data-test*="product"] a[href]','a[href*="/p/"]'
   ];
   const matched = new Set(broad);
   for (const sel of selectors) {
@@ -473,7 +515,6 @@ async function scrapeDetail(context, href, host, country) {
       ...extractFromOg(html, finalUrl, host, country)
     ];
 
-    // Fiyat hâlâ boşsa DOM fallback
     const needDom = !items.some(it => it.price_new != null);
     if (needDom) {
       const domItems = await extractFromDom(p, host, country);
@@ -502,27 +543,42 @@ async function scrapeDetail(context, href, host, country) {
   }
 }
 
-async function scrapeUrl(url) {
+async function scrapeWithEngine(url, engine) {
   const startedAt = new Date().toISOString();
-  const browser = await launchBrowser();
+  const browser = await launchBrowser(engine);
   const context = await newContext(browser);
-
   try {
     const page = await context.newPage();
     await gotoWithRetry(page, url);
+    await autoScrollAndLoadMore(page);
 
     const listHtml  = await page.content();
     const listUrl   = page.url();
     const host      = new URL(listUrl).host;
-    const country   = guessCountryFromHost(host) || 'UNK';
+    const country   = resolveCountry(listUrl);
 
     let items = dedupe([
       ...extractFromLdJson(listHtml, listUrl, host, country),
       ...extractFromOg(listHtml, listUrl, host, country)
     ]);
 
-    // Ürün linkleri → ilk N detay
+    // Listingten ürün linkleri → ilk N detay
     let productLinks = await findProductLinks(page);
+
+    // Basit sayfalama (ilk sayfada link yoksa)
+    if (TRY_PAGINATE && productLinks.length === 0) {
+      for (let p=2; p<=3; p++) {
+        const u = new URL(listUrl);
+        u.searchParams.set('page', String(p));
+        await gotoWithRetry(page, u.toString());
+        await autoScrollAndLoadMore(page, { maxScrolls: 3 });
+        const extra = await findProductLinks(page);
+        productLinks.push(...extra);
+        productLinks = Array.from(new Set(productLinks));
+        if (productLinks.length) break;
+      }
+    }
+
     productLinks = productLinks.slice(0, DETAIL_LIMIT);
 
     const lim = pLimit(Math.min(DETAIL_LIMIT, 4));
@@ -533,16 +589,16 @@ async function scrapeUrl(url) {
       if (r.ok && r.items?.length) items.push(...r.items);
     }
 
-    // Para birimi fallback (ülkeye göre)
     const fallbackCurrency = defaultCurrencyForCountry(country);
     items = items.map(it => ({
       ...it,
       currency: it.currency || fallbackCurrency || it.currency
     }));
 
-    // Temizlik + indirim yüzdesi
+    // Temizlik + indirim yüzdesi + fiyat mantık filtresi
     items = dedupe(items)
       .filter(it => it.name && it.url && it.price_new != null)
+      .filter(it => isSanePrice(it.price_new, it.currency))
       .map(it => ({ ...it, discount_pct: computeDiscount(it.price_new, it.price_old) }))
       .slice(0, 60);
 
@@ -553,21 +609,42 @@ async function scrapeUrl(url) {
       country,
       startedAt,
       finishedAt: new Date().toISOString(),
+      engine,
       ok: true,
       itemsCount: items.length,
       items
     };
-  } catch (err) {
-    return {
-      sourceUrl: url,
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      ok: false,
-      error: { name: err?.name || 'Error', message: String(err?.message || err) }
-    };
   } finally {
     await context.close().catch(()=>{});
     await browser.close().catch(()=>{});
+  }
+}
+
+async function scrapeUrl(url) {
+  // Chromium dene; HTTP/2/protokol veya spesifik engellerde Firefox fallback
+  try {
+    return await scrapeWithEngine(url, 'chromium');
+  } catch (e) {
+    if (/ERR_HTTP2|HTTP\/2|net::ERR/i.test(String(e?.message || e))) {
+      try {
+        return await scrapeWithEngine(url, 'firefox');
+      } catch (e2) {
+        return {
+          sourceUrl: url,
+          startedAt: new Date().toISOString(),
+          finishedAt: new Date().toISOString(),
+          ok: false,
+          error: { name: e2?.name || 'Error', message: String(e2?.message || e2) }
+        };
+      }
+    }
+    return {
+      sourceUrl: url,
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      ok: false,
+      error: { name: e?.name || 'Error', message: String(e?.message || e) }
+    };
   }
 }
 

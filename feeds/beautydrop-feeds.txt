@@ -1,13 +1,31 @@
 # =========================
-# TURKEY (TR)
+# TURKEY (TR) — Aggregator & Marketplace (çok mağaza)
 # =========================
-https://www.sephora.com.tr/sephora-kampanyalar.html
-https://www.sephora.com.tr/avantajli-teklif-5/
-https://www.watsons.com.tr/kampanyalar
-https://www.rossmann.com.tr/indirimli-urunler
-https://www.gratis.com/kampanyalar
-https://www.boyner.com.tr/kadin/kozmetik?kampanya=indirim
-https://www.sevil.com.tr/indirim
+# CIMRI – ana kategori ve alt kategoriler
+https://www.cimri.com/kozmetik-parfum
+https://www.cimri.com/makyaj-urunleri
+https://www.cimri.com/parfum
+https://www.cimri.com/cilt-bakimi
+https://www.cimri.com/sac-bakimi
+
+# AKAKCE – ana kategori ve alt kategoriler
+https://www.akakce.com/kozmetik-parfum/
+https://www.akakce.com/parfum/
+https://www.akakce.com/makyaj/
+https://www.akakce.com/cilt-bakimi/
+https://www.akakce.com/sac-bakimi/
+
+# Pazar yerleri (tek platformda çok satıcı)
+https://www.trendyol.com/kozmetik-saglik?os=1
+https://www.hepsiburada.com/indirim/kozmetik
+https://www.n11.com/kozmetik-kisisel-bakim?indirimli=1
+
+# (İstersen, doğrudan mağaza sayfalarını da aktif tutabilirsin)
+# https://www.sephora.com.tr/sephora-kampanyalar.html
+# https://www.rossmann.com.tr/indirimli-urunler
+# https://www.gratis.com/kampanyalar
+# https://www.watsons.com.tr/kampanyalar
+# https://www.sevil.com.tr/indirim
 
 # =========================
 # GERMANY (DE)
@@ -21,13 +39,12 @@ https://www.mueller.de/angebote/
 https://www.dm.de/angebote
 https://www.rossmann.de/de/angebote
 https://www.notino.de/sonderangebote/
-https://www.nivea.de/angebote
 
 # =========================
 # FRANCE (FR)
 # =========================
-https://www.sephora.fr/soldes/
 https://www.sephora.fr/offres-beaute/
+https://www.sephora.fr/soldes/
 https://www.marionnaud.fr/promotions/
 https://www.nocibe.fr/promotions/
 https://www.yves-rocher.fr/bonnes-affaires/
@@ -38,7 +55,6 @@ https://www.parfumdo.com/fr/bon-plan
 # ITALY (IT)
 # =========================
 https://www.sephora.it/offerte-di-bellezza/
-https://www.sephora.it/offerte-di-bellezza/ultime-occasioni/
 https://www.douglas.it/it/c/sale/010100
 https://www.kikocosmetics.com/it-it/offerte.html
 https://www.notino.it/offerte/
@@ -79,7 +95,7 @@ https://www.douglas.at/at/c/sale/010100
 https://www.marionnaud.at/angebote
 https://www.dm.at/angebote
 https://www.bipa.at/angebote
-https://www.nivea.at/angebote
+https://www.mueller.at/angebote
 
 # =========================
 # SWITZERLAND (CH)

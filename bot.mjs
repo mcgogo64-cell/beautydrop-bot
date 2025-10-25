@@ -1,19 +1,20 @@
 // bot.mjs — BeautyDrop deals scraper (Node 20+, ESM, Playwright)
-// Odak özellikler:
-// - HTTP/2 sorunlarına karşı Chromium --disable-http2 + Firefox fallback
+// Özellikler:
+// - Chromium --disable-http2 + Firefox fallback (HTTP/2 sorunlarını azaltır)
 // - SPA/Next/Nuxt listinglerde gelişmiş link çıkarımı (__NEXT_DATA__, __NUXT__, dataLayer)
 // - Consent otomasyonu (iframe dahil), auto-scroll + "Load more" + basit sayfalama
-// - Locale-aware fiyat ayrıştırma + sanity filtresi (uç/bozuk değerler elenir)
+// - Locale-aware fiyat ayrıştırma + sanity filtresi
 // - Ülke çözümleyici: TLD + .com override + path/language ipuçları
-// - Aggregator (Cimri/Akakçe) "two-hop": ürün sayfasındaki dış mağaza linkine gidip gerçek ürün detayını da toplar
-// - Çıktılar: data/deals-YYYY-MM-DD.json  ve  data/deals-latest.json
+// - Aggregator (Cimri/Akakçe) two-hop: dış mağaza linkine gidip gerçek ürün detayını toplar
+// - Çıktılar: data/deals-YYYY-MM-DD.json ve data/deals-latest.json
+//
+// Not: Harici bağımlılık yok. Playwright yeterli.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import { chromium, firefox } from 'playwright';
-import pLimit from 'p-limit';
 
 // ===== CLI =====
 const args = Object.fromEntries(
@@ -23,11 +24,24 @@ const args = Object.fromEntries(
   })
 );
 const HEADLESS      = args.headless !== undefined ? args.headless !== 'false' : true;
-const MAX_PER_PAGE  = Number(args.maxPerPage || 60);   // Maks. feed URL adedi
-const CONCURRENCY   = Number(args.concurrency || 4);   // Aynı anda kaç feed
-const DETAIL_LIMIT  = Number(args.detailLimit || 12);  // Listingten açılacak ürün sayısı
-const MAX_SCROLLS   = Number(args.maxScrolls || 6);    // Listingte auto-scroll tur sayısı
-const TRY_PAGINATE  = args.tryPaginate !== 'false';    // ?page=2.. denensin mi
+const MAX_PER_PAGE  = Number(args.maxPerPage || 60);   // kaç feed URL işlenecek
+const CONCURRENCY   = Number(args.concurrency || 4);   // aynı anda kaç feed
+const DETAIL_LIMIT  = Number(args.detailLimit || 12);  // listeden kaç ürün detayı
+const MAX_SCROLLS   = Number(args.maxScrolls || 6);    // listingte scroll turu
+const TRY_PAGINATE  = args.tryPaginate !== 'false';    // ?page=2.. dene
+
+// ===== Basit concurrency limiter (p-limit yerine) =====
+function makeLimiter(n) {
+  let active = 0;
+  const q = [];
+  const next = () => {
+    if (active >= n || q.length === 0) return;
+    active++;
+    const { fn, resolve, reject } = q.shift();
+    fn().then(resolve, reject).finally(() => { active--; next(); });
+  };
+  return (fn) => new Promise((resolve, reject) => { q.push({ fn, resolve, reject }); next(); });
+}
 
 // ===== Paths =====
 const __filename = fileURLToPath(import.meta.url);
@@ -43,7 +57,6 @@ function trim(s, n = 200) { return s ? (s.length > n ? s.slice(0, n) + '…' : s
 function uniq(arr) { return Array.from(new Set(arr)); }
 
 function resolveCountry(url) {
-  // TLD + path/dil ipuçları + .com override
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./,'').toLowerCase();
@@ -59,13 +72,11 @@ function resolveCountry(url) {
       'perfumesclub.com': 'ES', 'parfumdo.com': 'FR',
       'lookfantastic.com': 'UK', 'cultbeauty.co.uk': 'UK', 'beautybay.com': 'UK',
       'boots.com': 'UK', 'spacenk.com': 'UK',
-      // Pazar yerleri/aggregator
       'cimri.com': 'TR', 'akakce.com': 'TR',
       'trendyol.com': 'TR', 'hepsiburada.com': 'TR', 'n11.com': 'TR'
     };
     if (hostOverride[host]) return hostOverride[host];
 
-    // Path ipuçları
     if (host.endsWith('primor.eu') && pathLow.includes('/es_es/')) return 'ES';
     if (host.endsWith('kikocosmetics.com') && pathLow.includes('/it-it/')) return 'IT';
     if (host.endsWith('sephora.co.uk') && (pathLow.includes('/gb/en') || pathLow.includes('/en-gb'))) return 'UK';
@@ -88,22 +99,15 @@ function defaultCurrencyForCountry(country) {
 
 function parseNumberLocalized(input) {
   if (input == null) return null;
-  let s = String(input)
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/['’]/g, '')   // CHF vb. için apostrof binlikleri kaldır
-    .trim();
-
+  let s = String(input).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').replace(/['’]/g,'').trim();
   s = s.replace(/[^\d,.\-]/g, '');
   if (s.includes(',') && s.includes('.')) {
-    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56 → 1234.56
-    else s = s.replace(/,/g, ''); // 1,234.56 → 1234.56
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
   } else if (s.includes(',')) s = s.replace(',', '.');
-
-  const val = Number(s);
-  return Number.isFinite(val) ? val : null;
+  const v = Number(s);
+  return Number.isFinite(v) ? v : null;
 }
-
 function detectCurrencyFromText(txt) {
   if (!txt) return null;
   const s = txt.toUpperCase();
@@ -121,7 +125,6 @@ function detectCurrencyFromText(txt) {
   if (/TRY|TL/.test(s)) return 'TRY';
   return null;
 }
-
 function computeDiscount(priceNew, priceOld) {
   if (priceNew == null || priceOld == null) return null;
   if (!Number.isFinite(priceNew) || !Number.isFinite(priceOld)) return null;
@@ -129,15 +132,14 @@ function computeDiscount(priceNew, priceOld) {
   const pct = ((priceOld - priceNew) / priceOld) * 100;
   return Math.round(pct * 10) / 10;
 }
-
 function isSanePrice(value, currency) {
   if (!Number.isFinite(value) || value <= 0) return false;
-  const caps = { EUR: 2000, USD: 2000, GBP: 1800, PLN: 8000, HUF: 300000, RON: 10000, TRY: 200000, CHF: 2200, CZK: 50000, DKK: 15000, SEK: 20000, NOK: 20000 };
+  const caps = { EUR:2000, USD:2000, GBP:1800, PLN:8000, HUF:300000, RON:10000, TRY:200000, CHF:2200, CZK:50000, DKK:15000, SEK:20000, NOK:20000 };
   const cap = caps[currency || 'EUR'] || 2000;
   return value <= cap;
 }
 
-// ---- feeds parser (satırdaki ilk URL; "Ad | URL" formatı desteklenir) ----
+// ---- feeds parser ----
 function parseFeedsTxt(txt) {
   const urls = [];
   for (let raw of txt.split(/\r?\n/)) {
@@ -375,7 +377,7 @@ async function launchBrowser(engine = 'chromium') {
       '--no-sandbox',
       '--disable-dev-shm-usage',
       '--disable-blink-features=AutomationControlled',
-      '--disable-http2' // HTTP/2 kaynaklı ERR_HTTP2_PROTOCOL_ERROR azaltır
+      '--disable-http2'
     ]
   };
   if (engine === 'firefox') return await firefox.launch(common);
@@ -431,7 +433,6 @@ async function gotoWithRetry(page, url) {
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await autoConsent(page);
-      // SPA render için kısa bekleme + network idle
       await page.waitForTimeout(1000);
       await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(()=>{});
       return;
@@ -477,6 +478,7 @@ function dedupe(items) {
   return out;
 }
 
+// ===== Ürün linkleri (ileri yöntem) =====
 async function findProductLinksAdvanced(page) {
   const set = new Set();
 
@@ -527,13 +529,15 @@ async function findProductLinksAdvanced(page) {
     }
   } catch {}
 
-  // 3) Domain’e göre kart seçimleri
+  // 3) Domain’e göre kart seçimleri (DÜZELTİLMİŞ — bozuk satır yok!)
   const host = (new URL(page.url())).host.replace(/^www\./,'');
   const CARD_SELECTORS = {
+    // SEPHORA
     'sephora.de': ['a[href*="/p/"]'],
     'sephora.fr': ['a[href*="/p/"]'],
     'sephora.it': ['a[href*="/p/"]'],
     'sephora.es': ['a[href*="/p/"]'],
+    // DOUGLAS
     'douglas.de': ['a.ProductTile-link, a[href*="/p/"]'],
     'douglas.it': ['a.ProductTile-link, a[href*="/p/"]'],
     'douglas.es': ['a.ProductTile-link, a[href*="/p/"]'],
@@ -541,4 +545,258 @@ async function findProductLinksAdvanced(page) {
     'douglas.nl': ['a.ProductTile-link, a[href*="/p/"]'],
     'douglas.at': ['a.ProductTile-link, a[href*="/p/"]'],
     'douglas.ch': ['a.ProductTile-link, a[href*="/p/"]'],
-    'flaconi.de': ['a[href*="/produkt/"], a[h]()*]()]()
+    // DİĞERLERİ
+    'flaconi.de': ['a[href*="/produkt/"], a[href*="/p/"]'],
+    'parfumdreams.de': ['a[href*="/p-"], a[href*="/Produkt/"], a[href*="/p/"]'],
+    'dm.de': ['a[href*="/p/"], a[href*="/product/"]'],
+    'rossmann.de': ['a[href*="/produkty/"], a[href*="/produkt/"], a[href*="/p/"]', 'a[data-product-url]'],
+    'notino.de': ['a[href*="/p-"], a[href*="/produkt/"], a[href*="/p/"]'],
+    // TR
+    'sephora.com.tr': ['a[href*="/p-"], a[href*="/urun/"], a[href*="/p/"]'],
+    'rossmann.com.tr': ['a[href*="/urun/"], a[href*="/p/"]'],
+    'gratis.com': ['a[href*="/urun/"], a[href*="/p/"]'],
+    'watsons.com.tr': ['a[href*="/urun/"], a[href*="/p/"]'],
+    // ES
+    'druni.es': ['a[href*="/p-"], a[href*="/producto/"], a[href*="/p/"]'],
+    'primor.eu': ['a[href*="/p-"], a[href*="/producto/"], a[href*="/p/"]'],
+    'perfumesclub.com': ['a[href*="/p-"], a[href*="/producto/"], a[href*="/p/"]'],
+    // IT
+    'kikocosmetics.com': ['a[href*="/p/"]']
+  };
+  const sel = CARD_SELECTORS[host] || [
+    'a[href*="/p/"]','a[href*="/product"]','a[href*="/produkt"]','a[href*="/producto"]','a[href*="/prodotto"]'
+  ];
+  for (const s of sel) {
+    try {
+      const links = await page.$$eval(s, els => Array.from(new Set(els.map(e => e.href).filter(Boolean))));
+      links.forEach(h => set.add(h));
+    } catch {}
+  }
+
+  // 4) Geniş kapsamlı anchor taraması (fallback)
+  try {
+    const broad = await page.$$eval('a', as => {
+      const hrefs = [];
+      for (const a of as) {
+        const href = a.href || '';
+        if (!href || !/^https?:\/\//i.test(href)) continue;
+        const t = href.toLowerCase();
+        if (t.includes('/product') || t.includes('/produkte') || t.includes('/producto') ||
+            t.includes('/produkt') || /\/p\/[a-z0-9]/.test(t) || /\/p-\d+/.test(t) || /\/\d{4,}/.test(t)) {
+          hrefs.push(href);
+        }
+      }
+      return Array.from(new Set(hrefs));
+    });
+    broad.forEach(h => set.add(h));
+  } catch {}
+
+  return Array.from(set);
+}
+
+const AGGREGATOR_DOMAINS = new Set([
+  'cimri.com', 'www.cimri.com',
+  'akakce.com', 'www.akakce.com'
+]);
+
+async function scrapeDetail(context, href, host, country) {
+  const p = await context.newPage();
+  try {
+    await gotoWithRetry(p, href);
+    const html = await p.content();
+    const finalUrl = p.url();
+
+    let items = [
+      ...extractFromLdJson(html, finalUrl, host, country),
+      ...extractFromOg(html, finalUrl, host, country)
+    ];
+
+    const needDom = !items.some(it => it.price_new != null);
+    if (needDom) {
+      const domItems = await extractFromDom(p, host, country);
+      for (const d of domItems) {
+        items.push({
+          source: d.source,
+          name: trim(d.name, 180),
+          brand: d.brand || null,
+          price_new: d.price_new ?? null,
+          price_old: d.price_old ?? null,
+          discount_pct: d.discount_pct ?? null,
+          currency: d.currency ?? null,
+          availability: d.availability ?? null,
+          url: d.url,
+          image: d.image || null,
+          store: host,
+          country
+        });
+      }
+    }
+
+    // Aggregator two-hop: Cimri/Akakçe ürün sayfasından dış mağaza linkine git
+    if (AGGREGATOR_DOMAINS.has(host.toLowerCase())) {
+      try {
+        const outbound = await p.$$eval('a[href^="http"]', as => {
+          const bad = ['cimri.com','akakce.com','facebook.com','twitter.com','pinterest.com'];
+          const links = as.map(a => a.href).filter(Boolean);
+          const filtered = links.filter(h => !bad.some(b => h.includes(b)));
+          return Array.from(new Set(filtered)).slice(0, 2);
+        });
+        for (const ext of outbound) {
+          const extHost = new URL(ext).host;
+          const hop = await scrapeDetail(context, ext, extHost, resolveCountry(ext));
+          if (hop.ok && hop.items?.length) { items.push(...hop.items); break; }
+        }
+      } catch {}
+    }
+
+    return { ok: true, url: href, finalUrl, items: dedupe(items) };
+  } catch (err) {
+    return { ok: false, url: href, error: String(err?.message || err) };
+  } finally {
+    await p.close().catch(()=>{});
+  }
+}
+
+async function scrapeWithEngine(url, engine) {
+  const startedAt = new Date().toISOString();
+  const browser = await launchBrowser(engine);
+  const context = await newContext(browser);
+  try {
+    const page = await context.newPage();
+    await gotoWithRetry(page, url);
+
+    await autoScrollAndLoadMore(page, { maxScrolls: MAX_SCROLLS });
+    await page.waitForTimeout(800);
+    try {
+      await page.waitForSelector(
+        'a[href*="/p/"], a[href*="/product"], a[href*="/produkt"], a[href*="/producto"]',
+        { timeout: 5000 }
+      );
+    } catch {}
+
+    const listHtml  = await page.content();
+    const listUrl   = page.url();
+    const host      = new URL(listUrl).host;
+    const country   = resolveCountry(listUrl);
+
+    let items = dedupe([
+      ...extractFromLdJson(listHtml, listUrl, host, country),
+      ...extractFromOg(listHtml, listUrl, host, country)
+    ]);
+
+    let productLinks = await findProductLinksAdvanced(page);
+
+    // Basit sayfalama (ilk sayfada link yoksa)
+    if (TRY_PAGINATE && productLinks.length === 0) {
+      for (let p=2; p<=3; p++) {
+        const u = new URL(listUrl);
+        u.searchParams.set('page', String(p));
+        await gotoWithRetry(page, u.toString());
+        await autoScrollAndLoadMore(page, { maxScrolls: 3 });
+        const extra = await findProductLinksAdvanced(page);
+        productLinks.push(...extra);
+        productLinks = Array.from(new Set(productLinks));
+        if (productLinks.length) break;
+      }
+    }
+
+    productLinks = productLinks.slice(0, DETAIL_LIMIT);
+
+    const limitDetails = makeLimiter(Math.min(DETAIL_LIMIT, 4));
+    const detailResults = await Promise.all(
+      productLinks.map(href => limitDetails(() => scrapeDetail(context, href, host, country)))
+    );
+    for (const r of detailResults) {
+      if (r.ok && r.items?.length) items.push(...r.items);
+    }
+
+    const fallbackCurrency = defaultCurrencyForCountry(country);
+    items = items.map(it => ({
+      ...it,
+      currency: it.currency || fallbackCurrency || it.currency
+    }));
+
+    items = dedupe(items)
+      .filter(it => it.name && it.url && it.price_new != null)
+      .filter(it => isSanePrice(it.price_new, it.currency))
+      .map(it => ({ ...it, discount_pct: computeDiscount(it.price_new, it.price_old) }))
+      .slice(0, 60);
+
+    return {
+      sourceUrl: url,
+      finalUrl: listUrl,
+      host,
+      country,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      engine,
+      ok: true,
+      itemsCount: items.length,
+      items
+    };
+  } finally {
+    await context.close().catch(()=>{});
+    await browser.close().catch(()=>{});
+  }
+}
+
+async function scrapeUrl(url) {
+  try {
+    return await scrapeWithEngine(url, 'chromium');
+  } catch (e) {
+    if (/ERR_HTTP2|HTTP\/2|net::ERR/i.test(String(e?.message || e))) {
+      try {
+        return await scrapeWithEngine(url, 'firefox');
+      } catch (e2) {
+        return { sourceUrl: url, ok: false, error: { name: e2?.name || 'Error', message: String(e2?.message || e2) } };
+      }
+    }
+    return { sourceUrl: url, ok: false, error: { name: e?.name || 'Error', message: String(e?.message || e) } };
+  }
+}
+
+// ===== Main =====
+async function main() {
+  await ensureDir(DATA_DIR);
+  const feeds = await readFeeds(FEEDS_TXT);
+
+  const day        = isoDay();
+  const dailyPath  = path.join(DATA_DIR, `deals-${day}.json`);
+  const latestPath = path.join(DATA_DIR, `deals-latest.json`);
+
+  if (!feeds.length) {
+    const payload = { date: day, total: 0, note: 'No feeds to scrape', results: [] };
+    await fs.writeFile(dailyPath, JSON.stringify(payload, null, 2), 'utf8');
+    await fs.writeFile(latestPath, JSON.stringify(payload, null, 2), 'utf8');
+    console.log(`[warn] ${FEEDS_TXT} boş veya URL bulunamadı.`);
+    console.log(`[ok] Yazıldı: ${dailyPath}`);
+    return;
+  }
+
+  console.log(`[info] ${feeds.length} feed | headless=${HEADLESS} | cc=${CONCURRENCY} | detailLimit=${DETAIL_LIMIT}`);
+
+  const limitFeeds = makeLimiter(CONCURRENCY);
+  const results = await Promise.all(feeds.slice(0, MAX_PER_PAGE).map(u => limitFeeds(() => scrapeUrl(u))));
+
+  const out = {
+    date: day,
+    total: results.length,
+    perCountry: Object.fromEntries(
+      Object.entries(
+        results.reduce((acc, r) => {
+          const c = r.country || 'UNK';
+          acc[c] = (acc[c] || 0) + (r.itemsCount || 0);
+          return acc;
+        }, {})
+      ).sort()
+    ),
+    results
+  };
+
+  await fs.writeFile(dailyPath, JSON.stringify(out, null, 2), 'utf8');
+  await fs.writeFile(latestPath, JSON.stringify(out, null, 2), 'utf8');
+  console.log(`[ok] Yazıldı: ${dailyPath}`);
+  console.log(`[ok] Yazıldı: ${latestPath}`);
+}
+
+main().catch(e => { console.error('[fatal]', e); process.exitCode = 1; });

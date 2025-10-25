@@ -1,12 +1,11 @@
 // bot.mjs — BeautyDrop deals scraper (Node 20+, ESM, Playwright)
-// Odak: "0 ürün" ve fiyat/ülke hatalarını bitirmek için:
-// - Gelişmiş consent (iframe dahil)
-// - Listing sayfalarında auto-scroll + "Load more" tıklama + basit sayfalama
-// - LD+JSON → OG → Microdata → Görünür DOM → Script JSON sıralaması
-// - Ülke çözümleyici (TLD + path/language heuristics)
-// - Locale-aware fiyat ayrıştırma + mantık (sanity) filtresi
-// - HTTP/2 hatalarında Firefox fallback
-// Çıktılar: data/deals-YYYY-MM-DD.json  ve  data/deals-latest.json
+// Sorun odaklı çözümler:
+// - HTTP/2 sorunlarına karşı Chromium --disable-http2 + Firefox fallback
+// - SPA/Next/Nuxt listinglerde gelişmiş link çıkarımı (__NEXT_DATA__, __NUXT__, dataLayer)
+// - Consent otomasyonu (iframe dahil), auto-scroll + "Load more" + basit sayfalama
+// - Locale-aware fiyat ayrıştırma + sanity filtresi (uç/bozuk değerler elenir)
+// - Ülke çözümleyici: TLD + .com override + path/language ipuçları
+// - Çıktılar: data/deals-YYYY-MM-DD.json  ve  data/deals-latest.json
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -26,7 +25,7 @@ const HEADLESS      = args.headless !== undefined ? args.headless !== 'false' : 
 const MAX_PER_PAGE  = Number(args.maxPerPage || 60);   // Maks. feed URL adedi
 const CONCURRENCY   = Number(args.concurrency || 4);   // Aynı anda kaç feed
 const DETAIL_LIMIT  = Number(args.detailLimit || 12);  // Bir listingten açılacak ürün sayısı
-const MAX_SCROLLS   = Number(args.maxScrolls || 6);    // Listingte kaç kez auto-scroll
+const MAX_SCROLLS   = Number(args.maxScrolls || 6);    // Listingte auto-scroll tur sayısı
 const TRY_PAGINATE  = args.tryPaginate !== 'false';    // ?page=2.. denensin mi
 
 // ===== Paths =====
@@ -43,26 +42,31 @@ function trim(s, n = 200) { return s ? (s.length > n ? s.slice(0, n) + '…' : s
 function uniq(arr) { return Array.from(new Set(arr)); }
 
 function resolveCountry(url) {
-  // TLD + path/dil kodu ipuçları (es_es, it-it, gb/en, vb.)
+  // TLD + path/dil kodu ipuçları + .com override
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./,'').toLowerCase();
-    const tld = host.split('.').pop();
     const pathLow = u.pathname.toLowerCase();
+    const tld = host.split('.').pop();
 
     const tldMap = { de:'DE', tr:'TR', fr:'FR', it:'IT', es:'ES', nl:'NL', be:'BE', at:'AT', ch:'CH',
                      pl:'PL', cz:'CZ', sk:'SK', hu:'HU', ro:'RO', bg:'BG', gr:'GR', pt:'PT',
-                     dk:'DK', se:'SE', no:'NO', fi:'FI', ie:'IE', uk:'UK' };
-    // Path tabanlı dil/ülke
-    if (host.endsWith('primor.eu')     && pathLow.includes('/es_es/')) return 'ES';
+                     dk:'DK', se:'SE', no:'NO', fi:'FI', ie:'IE', uk:'UK', co:'UK' };
+
+    const hostOverride = {
+      'gratis.com': 'TR', 'boyner.com.tr': 'TR', 'sevil.com.tr': 'TR',
+      'perfumesclub.com': 'ES', 'parfumdo.com': 'FR',
+      'lookfantastic.com': 'UK', 'cultbeauty.co.uk': 'UK', 'beautybay.com': 'UK',
+      'boots.com': 'UK', 'spacenk.com': 'UK'
+    };
+    if (hostOverride[host]) return hostOverride[host];
+
+    // Path ipuçları
+    if (host.endsWith('primor.eu') && pathLow.includes('/es_es/')) return 'ES';
     if (host.endsWith('kikocosmetics.com') && pathLow.includes('/it-it/')) return 'IT';
-    if (host.endsWith('gratis.com')    && pathLow.includes('/kampanyalar')) return 'TR';
     if (host.endsWith('sephora.co.uk') && (pathLow.includes('/gb/en') || pathLow.includes('/en-gb'))) return 'UK';
+    if (host.endsWith('gratis.com') && pathLow.includes('/kampanyalar')) return 'TR';
 
-    // Boots/Lookfantastic/Cultbeauty/Beautybay UK gibi .com → UK
-    if (/(boots|lookfantastic|cultbeauty|beautybay)\.com$/.test(host)) return 'UK';
-
-    // TLD fallback
     return tldMap[tld] || 'UNK';
   } catch {
     return 'UNK';
@@ -86,7 +90,6 @@ function parseNumberLocalized(input) {
     .replace(/['’]/g, '')   // CHF vb. için apostrof binlikleri kaldır
     .trim();
 
-  // Sembolleri/harfleri temizle ama ayırıcıları koru
   s = s.replace(/[^\d,.\-]/g, '');
   if (s.includes(',') && s.includes('.')) {
     if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56 → 1234.56
@@ -130,7 +133,7 @@ function isSanePrice(value, currency) {
   return value <= cap;
 }
 
-// ---- feeds parser (satır içindeki ilk URL'i yakalar; "Ad | URL" dahil) ----
+// ---- feeds parser (satırdaki ilk URL'i yakalar; "Ad | URL" satırları desteklenir) ----
 function parseFeedsTxt(txt) {
   const urls = [];
   for (let raw of txt.split(/\r?\n/)) {
@@ -367,7 +370,8 @@ async function launchBrowser(engine = 'chromium') {
     args: [
       '--no-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-blink-features=AutomationControlled'
+      '--disable-blink-features=AutomationControlled',
+      '--disable-http2' // HTTP/2 kaynaklı ERR_HTTP2_PROTOCOL_ERROR azaltır
     ]
   };
   if (engine === 'firefox') return await firefox.launch(common);
@@ -399,19 +403,19 @@ async function clickConsentIn(pageLike) {
     'button:has-text("Aceptar")','button:has-text("Aceptar todo")',
     'button:has-text("Kabul et")','button:has-text("Tümünü kabul et")',
     'button[aria-label*="accept" i]','button[aria-label*="Akzeptieren" i]',
-    '[role="dialog"] button:has-text("Accept")'
+    '[role="dialog"] button:has-text("Accept")',
+    '[id*="consent"] button', '.cookie-accept, .js-accept-all'
   ];
   for (const sel of selectors) {
     try {
       const btn = await pageLike.$(sel);
-      if (btn) { await btn.click({ timeout: 800 }); await pageLike.waitForTimeout(250); }
+      if (btn) { await btn.click({ timeout: 1200 }); await pageLike.waitForTimeout(400); }
     } catch {}
   }
 }
 
 async function autoConsent(page) {
   await clickConsentIn(page);
-  // iframe içindeki CMP
   for (const f of page.frames()) {
     try { await clickConsentIn(f); } catch {}
   }
@@ -423,6 +427,9 @@ async function gotoWithRetry(page, url) {
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await autoConsent(page);
+      // SPA render için kısa bekleme + network idle
+      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(()=>{});
       return;
     } catch (e) {
       lastErr = e;
@@ -434,22 +441,21 @@ async function gotoWithRetry(page, url) {
 
 async function autoScrollAndLoadMore(page, { maxScrolls = MAX_SCROLLS } = {}) {
   const moreBtns = [
-    'button:has-text("Load more")',
-    'button:has-text("Mehr")',
-    'button:has-text("Mehr anzeigen")',
-    'button:has-text("Daha fazla")',
-    'button:has-text("Tümünü göster")',
-    'button:has-text("Weitere Anzeigen")',
+    'button:has-text("Load more")','button:has-text("Mehr")','button:has-text("Mehr anzeigen")',
+    'button:has-text("Daha fazla")','button:has-text("Tümünü göster")','button:has-text("Weitere Anzeigen")'
   ];
+  let lastHeight = 0;
   for (let i=0;i<maxScrolls;i++){
     try {
       await page.evaluate(() => window.scrollBy(0, document.body.scrollHeight));
-      await page.waitForTimeout(600);
-      // varsa "daha fazla"yı tıkla
+      await page.waitForTimeout(700);
       for (const sel of moreBtns) {
         const btn = await page.$(sel).catch(()=>null);
-        if (btn) { await btn.click().catch(()=>{}); await page.waitForTimeout(800); }
+        if (btn) { await btn.click().catch(()=>{}); await page.waitForTimeout(900); }
       }
+      const h = await page.evaluate(() => document.body.scrollHeight);
+      if (h <= lastHeight) break;
+      lastHeight = h;
       await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(()=>{});
     } catch {}
   }
@@ -467,40 +473,114 @@ function dedupe(items) {
   return out;
 }
 
-async function findProductLinks(page) {
-  const broad = await page.$$eval('a', as => {
-    const hrefs = [];
-    for (const a of as) {
-      const href = a.href || a.getAttribute('href') || '';
-      if (!href || !/^https?:\/\//i.test(href)) continue;
-      const t = href.toLowerCase();
-      if (
-        t.includes('/product') || t.includes('/produkte') || t.includes('/producto') ||
-        t.includes('/produkt') || /\/p\/[a-z0-9]/.test(t) || /\/\d{4,}/.test(t)
-      ) {
-        hrefs.push(href);
+async function findProductLinksAdvanced(page) {
+  const set = new Set();
+
+  // 0) Next: __NEXT_DATA__
+  try {
+    const nextJson = await page.$eval('#__NEXT_DATA__', el => el.textContent).catch(() => null);
+    if (nextJson) {
+      const obj = JSON.parse(nextJson);
+      (function walk(x){
+        if (!x || typeof x !== 'object') return;
+        if (x.url && typeof x.url === 'string' && /^https?:\/\//i.test(x.url)) {
+          if (/(\/p\/|\/product|\/produkt|\/producto|\/prodotto|\/[a-z]*-p\d+)/i.test(x.url)) set.add(x.url);
+        }
+        for (const k in x) walk(x[k]);
+      })(obj);
+    }
+  } catch {}
+
+  // 1) Nuxt: __NUXT__
+  try {
+    const nuxt = await page.evaluate(() => {
+      try { return window.__NUXT__ || null; } catch { return null; }
+    });
+    if (nuxt) {
+      (function walk(x){
+        if (!x || typeof x !== 'object') return;
+        if (x.link && typeof x.link === 'string' && /^https?:\/\//i.test(x.link)) {
+          if (/(\/p\/|\/product|\/produkt|\/producto|\/prodotto|\/[a-z]*-p\d+)/i.test(x.link)) set.add(x.link);
+        }
+        for (const k in x) walk(x[k]);
+      })(nuxt);
+    }
+  } catch {}
+
+  // 2) dataLayer
+  try {
+    const dl = await page.evaluate(() => Array.isArray(window.dataLayer) ? window.dataLayer : null);
+    if (dl) {
+      for (const entry of dl) {
+        if (entry && typeof entry === 'object') {
+          for (const v of Object.values(entry)) {
+            if (v && typeof v === 'object' && v.url && /^https?:\/\//i.test(v.url)) {
+              if (/(\/p\/|\/product|\/produkt|\/producto|\/prodotto|\/[a-z]*-p\d+)/i.test(v.url)) set.add(v.url);
+            }
+          }
+        }
       }
     }
-    return Array.from(new Set(hrefs));
-  });
+  } catch {}
 
-  const selectors = [
-    'a.product-link','a.product-card','a.ProductCard__link','a.c-product-card__link',
-    '.product a[href]','.product-card a[href]','.product-item a[href]','.grid-product a[href]',
-    'a[data-test*="product"] a[href]','a[href*="/p/"]'
-  ];
-  const matched = new Set(broad);
-  for (const sel of selectors) {
+  // 3) Domain’e göre kart seçimleri
+  const host = (new URL(page.url())).host.replace(/^www\./,'');
+  const CARD_SELECTORS = {
+    'sephora.de': ['a[href*="/p/"]'],
+    'sephora.fr': ['a[href*="/p/"]'],
+    'sephora.it': ['a[href*="/p/"]'],
+    'sephora.es': ['a[href*="/p/"]'],
+    'douglas.de': ['a.ProductTile-link, a[href*="/p/"]'],
+    'douglas.it': ['a.ProductTile-link, a[href*="/p/"]'],
+    'douglas.es': ['a.ProductTile-link, a[href*="/p/"]'],
+    'douglas.be': ['a.ProductTile-link, a[href*="/p/"]'],
+    'douglas.nl': ['a.ProductTile-link, a[href*="/p/"]'],
+    'douglas.at': ['a.ProductTile-link, a[href*="/p/"]'],
+    'douglas.ch': ['a.ProductTile-link, a[href*="/p/"]'],
+    'flaconi.de': ['a[href*="/produkt/"], a[href*="/p/"]'],
+    'parfumdreams.de': ['a[href*="/p-"], a[href*="/Produkt/"], a[href*="/p/"]'],
+    'dm.de': ['a[href*="/p/"], a[href*="/product/"]'],
+    'rossmann.de': ['a[href*="/produkty/"], a[href*="/produkt/"], a[href*="/p/"]', 'a[data-product-url]'],
+    'notino.de': ['a[href*="/p-"], a[href*="/produkt/"], a[href*="/p/"]'],
+    // TR
+    'sephora.com.tr': ['a[href*="/p-"], a[href*="/urun/"], a[href*="/p/"]'],
+    'rossmann.com.tr': ['a[href*="/urun/"], a[href*="/p/"]'],
+    'gratis.com': ['a[href*="/urun/"], a[href*="/p/"]'],
+    'watsons.com.tr': ['a[href*="/urun/"], a[href*="/p/"]'],
+    // ES
+    'druni.es': ['a[href*="/p-"], a[href*="/producto/"], a[href*="/p/"]'],
+    'primor.eu': ['a[href*="/p-"], a[href*="/producto/"], a[href*="/p/"]'],
+    'perfumesclub.com': ['a[href*="/p-"], a[href*="/producto/"], a[href*="/p/"]'],
+    // IT
+    'kikocosmetics.com': ['a[href*="/p/"]'],
+  };
+  const sel = CARD_SELECTORS[host] || ['a[href*="/p/"]','a[href*="/product"]','a[href*="/produkt"]','a[href*="/producto"]','a[href*="/prodotto"]'];
+  for (const s of sel) {
     try {
-      const links = await page.$$eval(sel, els =>
-        Array.from(new Set(
-          els.map(e => e.href || e.getAttribute('href') || '').filter(h => /^https?:\/\//i.test(h))
-        ))
-      );
-      for (const l of links) matched.add(l);
+      const links = await page.$$eval(s, els => Array.from(new Set(els.map(e => e.href).filter(Boolean))));
+      links.forEach(h => set.add(h));
     } catch {}
   }
-  return Array.from(matched);
+
+  // 4) Geniş kapsamlı anchor taraması
+  try {
+    const broad = await page.$$eval('a', as => {
+      const hrefs = [];
+      for (const a of as) {
+        const href = a.href || '';
+        if (!href || !/^https?:\/\//i.test(href)) continue;
+        const t = href.toLowerCase();
+        if (t.includes('/product') || t.includes('/produkte') || t.includes('/producto') ||
+            t.includes('/produkt') || /\/p\/[a-z0-9]/.test(t) || /\/p-\d+/.test(t) || /\/\d{4,}/.test(t)) {
+          hrefs.push(href);
+        }
+      }
+      return Array.from(new Set(hrefs));
+    });
+    broad.forEach(h => set.add(h));
+  } catch {}
+
+  return Array.from(set);
 }
 
 async function scrapeDetail(context, href, host, country) {
@@ -550,7 +630,15 @@ async function scrapeWithEngine(url, engine) {
   try {
     const page = await context.newPage();
     await gotoWithRetry(page, url);
-    await autoScrollAndLoadMore(page);
+
+    await autoScrollAndLoadMore(page, { maxScrolls: MAX_SCROLLS });
+    await page.waitForTimeout(800);
+    try {
+      await page.waitForSelector(
+        'a[href*="/p/"], a[href*="/product"], a[href*="/produkt"], a[href*="/producto"]',
+        { timeout: 5000 }
+      );
+    } catch {}
 
     const listHtml  = await page.content();
     const listUrl   = page.url();
@@ -563,7 +651,7 @@ async function scrapeWithEngine(url, engine) {
     ]);
 
     // Listingten ürün linkleri → ilk N detay
-    let productLinks = await findProductLinks(page);
+    let productLinks = await findProductLinksAdvanced(page);
 
     // Basit sayfalama (ilk sayfada link yoksa)
     if (TRY_PAGINATE && productLinks.length === 0) {
@@ -572,7 +660,7 @@ async function scrapeWithEngine(url, engine) {
         u.searchParams.set('page', String(p));
         await gotoWithRetry(page, u.toString());
         await autoScrollAndLoadMore(page, { maxScrolls: 3 });
-        const extra = await findProductLinks(page);
+        const extra = await findProductLinksAdvanced(page);
         productLinks.push(...extra);
         productLinks = Array.from(new Set(productLinks));
         if (productLinks.length) break;

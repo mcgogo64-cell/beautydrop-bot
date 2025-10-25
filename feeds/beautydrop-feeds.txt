@@ -185,7 +185,7 @@ https://www.sokos.fi/fi/sokos/edut-ja-kampanjat
 # =========================
 https://www.boots.ie/offers
 https://www.mccabespharmacy.com/collections/offers
-https://www.meagherspharmacy.ie/collections/offers
+https://www.meagherspharmacy.com/collections/offers
 
 # =========================
 # UNITED KINGDOM (UK)
